@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}ثبت حساب افتتاحیه قرضه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:13px; font-weight:bold;
+        padding:9px 14px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:130px; }
+    .field-row input, .field-row select { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .date-group { display:flex; gap:6px; width:280px; }
+    .date-group select { flex:1; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .amt-receivable { color:#2e7d32; font-weight:bold; }
+    .amt-payable { color:#c62828; font-weight:bold; }
+    .search-bar { display:flex; align-items:center; gap:8px; }
+    .search-bar select, .search-bar input { padding:5px 10px; border:none; border-radius:4px; font-size:12px; }
+    .search-bar button { background:#e8eef4; border:1px solid #cfd8e3; border-radius:4px; padding:5px 14px; font-size:12px; cursor:pointer; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">ثبت حساب افتتاحیه قرضه</div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_bo %}
+            <input type="hidden" name="bo_id" value="{{ edit_bo.id }}">
+            {% endif %}
+
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="j_year">
+                        {% for y in range(today.year-3, today.year+2) %}
+                        <option value="{{ y }}" {% if (edit_bo and edit_bo.j_year == y) or (not edit_bo and today.year == y) %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="j_month">
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if (edit_bo and edit_bo.j_month == m) or (not edit_bo and today.month == m) %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="j_day">
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if (edit_bo and edit_bo.j_day == d) or (not edit_bo and today.day == d) %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ</label>
+            </div>
+
+            <div class="field-row">
+                <input type="text" name="borrower_name" list="borrowerNamesList" autocomplete="off" required
+                       value="{{ edit_bo.borrower.name if edit_bo and edit_bo.borrower else '' }}">
+                <datalist id="borrowerNamesList">
+                    {% for b in borrower_list %}
+                    <option value="{{ b.name }}">
+                    {% endfor %}
+                </datalist>
+                <label>نام قرضه</label>
+            </div>
+
+            <div class="field-row">
+                <select name="currency">
+                    <option value="">-- انتخاب کنید --</option>
+                    <option value="AFN" {% if edit_bo and edit_bo.currency == 'AFN' %}selected{% endif %}>افغانی (AFN)</option>
+                    <option value="USD" {% if edit_bo and edit_bo.currency == 'USD' %}selected{% endif %}>دالر (USD)</option>
+                    <option value="IRR" {% if edit_bo and edit_bo.currency == 'IRR' %}selected{% endif %}>تومان (IRR)</option>
+                </select>
+                <label>واحدپول</label>
+            </div>
+
+            <div class="field-row">
+                <input type="number" step="0.01" name="amount" value="{{ edit_bo.amount if edit_bo else '' }}">
+                <label>حساب افتتاحیه</label>
+            </div>
+
+            <div class="field-row">
+                <select name="account_type">
+                    <option value="">-- انتخاب کنید --</option>
+                    <option value="receivable" {% if edit_bo and edit_bo.account_type == 'receivable' %}selected{% endif %}>طلب ما از قرض‌گیرنده</option>
+                    <option value="payable" {% if edit_bo and edit_bo.account_type == 'payable' %}selected{% endif %}>بدهی ما به قرض‌دهنده</option>
+                </select>
+                <label>نوعیت حساب</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.borrower_opening') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <form class="search-bar" method="get">
+            <select name="type_placeholder" disabled>
+                <option>قرضه</option>
+            </select>
+            <input type="text" id="liveSearch" name="q" value="{{ search }}" placeholder="جستجوی قرضه">
+            <button type="submit">جستجو</button>
+        </form>
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>تاریخ</th>
+                <th>نام</th>
+                <th>واحدپول</th>
+                <th>حساب افتتاحیه</th>
+                <th style="width:70px">ویرایش</th>
+                <th style="width:70px">حذف</th>
+            </tr>
+        </thead>
+        <tbody id="boTableBody">
+            {% for r in records %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td class="bo-name">{{ r.borrower.name if r.borrower else '-' }}</td>
+                <td>{{ r.currency or '-' }}</td>
+                <td class="{{ 'amt-payable' if r.account_type == 'receivable' else 'amt-receivable' }}">
+                    {{ '{:,.0f}'.format(-r.amount if r.account_type == 'receivable' else r.amount) }}
+                </td>
+                <td><a href="{{ url_for('main.borrower_opening', edit=r.id) }}" class="act-link">✏ ویرایش</a></td>
+                <td><a href="{{ url_for('main.borrower_opening_delete', id=r.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑 حذف</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#999;">هیچ رکوردی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#boTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.bo-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

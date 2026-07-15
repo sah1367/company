@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}دسترسیهای {{ menu_title }}{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:24px 20px; background:#fff; }
+    .list-frame { max-width:420px; margin:0 auto; border:1px solid #cfd8dc; border-radius:4px; padding:14px; }
+    .list-row { display:flex; align-items:center; justify-content:space-between; border:1px solid #eee;
+                border-radius:2px; padding:6px 10px; margin-bottom:4px; background:#fff; }
+    .list-row:nth-child(odd) { background:#fafbfc; }
+    .list-row-left { display:flex; align-items:center; gap:8px; }
+    .list-row input[type=checkbox] { width:16px; height:16px; cursor:pointer; accent-color:#1e88e5; }
+    .list-row label { font-size:12.5px; color:#333; cursor:pointer; }
+    .list-row.sub label { color:#666; }
+    .row-icon { width:22px; height:22px; border-radius:3px; display:flex; align-items:center; justify-content:center;
+                font-size:12px; color:#fff; font-weight:bold; }
+    .row-icon.page { background:#1e88e5; }
+    .row-icon.list { background:#8d6e63; }
+    .row-icon.form { background:#43a047; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:16px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:20px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>دسترسیهای {{ menu_title }} — {{ user.username }}</span></div>
+    <div class="panel-body">
+        <div class="list-frame">
+            <form method="post">
+                {% for row in rows %}
+                {% set icon_cls = 'page' if row.key.endswith('__page') else ('list' if row.key.endswith('__list') else 'form') %}
+                {% set icon_letter = 'ص' if icon_cls == 'page' else ('م' if icon_cls == 'list' else 'ف') %}
+                <div class="list-row {% if icon_cls != 'page' %}sub{% endif %}">
+                    <div class="list-row-left">
+                        <input type="checkbox" name="access_keys" value="{{ row.key }}" id="row_{{ row.key }}"
+                               {% if row.checked %}checked{% endif %}>
+                        <label for="row_{{ row.key }}">{{ row.label }}</label>
+                    </div>
+                    <span class="row-icon {{ icon_cls }}">{{ icon_letter }}</span>
+                </div>
+                {% endfor %}
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">ذخیره</button>
+                    <a href="{{ url_for('main.user_menu_access_hub', id=user.id) }}" class="btn-cancel">انصراف</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

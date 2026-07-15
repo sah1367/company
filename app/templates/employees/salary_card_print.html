@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>کارت معاشات — {{ sc.employee.name if sc.employee else '' }}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { background:#fff; padding:20px; color:#111; }
+    .doc { max-width:650px; margin:0 auto; border:2px solid #000; }
+
+    .doc-title {
+        text-align:center; font-size:16px; font-weight:bold; padding:10px;
+        border-bottom:2px solid #000; background:#f0f5fb;
+    }
+
+    table.card-table { width:100%; border-collapse:collapse; }
+    table.card-table td { border:1px solid #000; padding:9px 10px; font-size:13.5px; text-align:center; }
+    .label-cell { background:#eaf1f9; font-weight:bold; width:33%; }
+    .value-cell { width:33%; font-weight:bold; }
+    .notes-cell { text-align:right; vertical-align:top; padding:14px 10px; }
+
+    .sign-row { display:flex; justify-content:space-between; padding:36px 30px 24px; font-size:14px; font-weight:bold; }
+
+    .no-print { text-align:center; margin-bottom:14px; }
+    .no-print button { padding:8px 20px; background:#1e88e5; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; }
+    @media print { .no-print { display:none; } }
+</style>
+</head>
+<body>
+
+<div class="no-print"><button onclick="window.print()">چاپ کارت</button></div>
+
+<div class="doc">
+    <div class="doc-title">کارت معاشات کارمندان ازبابت سال کاری {{ sc.j_year }}</div>
+
+    <table class="card-table">
+        <tr>
+            <td class="label-cell">شماره</td>
+            <td class="value-cell">{{ sc.employee_id }}</td>
+            <td class="label-cell">معاش روزانه</td>
+            <td class="value-cell">{{ '{:,.0f}'.format(sc.daily_salary) }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">اسم</td>
+            <td class="value-cell">{{ sc.employee.name if sc.employee else '-' }}</td>
+            <td class="label-cell" rowspan="6">ملاحظات</td>
+            <td class="notes-cell" rowspan="6">{{ sc.notes or '' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">ولد/فامیلی</td>
+            <td class="value-cell">{{ sc.employee.father_name if sc.employee and sc.employee.father_name else '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">تلفن</td>
+            <td class="value-cell">{{ sc.employee.phone if sc.employee and sc.employee.phone else '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">برج</td>
+            <td class="value-cell">{{ month_name }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">معاش خالص</td>
+            <td class="value-cell">{{ '{:,.0f}'.format(sc.net_salary) }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">حاضری</td>
+            <td class="value-cell">{{ sc.attendance_days }}</td>
+        </tr>
+
+        <tr>
+            <td class="label-cell">اضافه‌کاری (ساعت)</td>
+            <td class="value-cell">{{ '%.1f'|format(sc.overtime_hours) }}</td>
+            <td class="label-cell">معاش روزهای حاضری</td>
+            <td class="value-cell">{{ '{:,.0f}'.format(sc.attendance_salary) }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">مبلغ اضافه‌کاری</td>
+            <td class="value-cell">{{ '{:,.0f}'.format(sc.overtime_amount) }}</td>
+            <td class="label-cell">مجموعه</td>
+            <td class="value-cell">{{ '{:,.0f}'.format(sc.total_amount) }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">پیش پرداخت</td>
+            <td class="value-cell">{{ '{:,.0f}'.format(sc.advance_payment) }}</td>
+            <td class="label-cell">مبلغ قابل تادیه</td>
+            <td class="value-cell" style="color:#1565c0;">{{ '{:,.0f}'.format(sc.payable_amount) }} {{ sc.currency or '' }}</td>
+        </tr>
+    </table>
+
+    <div class="sign-row">
+        <span>امضای رئیس: .....................</span>
+        <span>امضای حسابدار: .....................</span>
+    </div>
+</div>
+
+</body>
+</html>

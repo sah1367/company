@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block title %}ثبت سفارشات{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:18px 16px; background:#fff; }
+
+    .top-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-bottom:10px; align-items:center; }
+    .top-row .grp { display:flex; align-items:center; gap:6px; }
+    .top-row label { font-size:12px; color:#333; white-space:nowrap; }
+    .top-row input, .top-row select { padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .date-group { display:flex; gap:4px; }
+    .date-group select { width:60px; }
+
+    table.bom-table { width:100%; border-collapse:collapse; }
+    table.bom-table th { background:#1e88e5; color:#fff; font-size:11px; padding:6px 6px; text-align:right; white-space:nowrap; }
+    table.bom-table td { padding:3px 5px; font-size:11px; border-bottom:1px solid #eee; }
+    table.bom-table input, table.bom-table select { width:100%; padding:4px 5px; border:1px solid #ddd; border-radius:3px; font-size:11px; }
+    .row-no { text-align:center; width:30px; color:#555; }
+
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:16px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:11px; padding:8px 8px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 8px; font-size:11px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .status-pending { color:#f57f17; font-weight:bold; }
+    .status-invoiced { color:#2e7d32; font-weight:bold; }
+    .status-cancelled { color:#c62828; font-weight:bold; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">ثبت سفارشات</div>
+    <div class="panel-body">
+        <form method="post" id="orderForm">
+            {% if edit_o %}
+            <input type="hidden" name="o_id" value="{{ edit_o.id }}">
+            {% endif %}
+
+            <div class="top-row">
+                <div class="grp">
+                    <label>مشتری</label>
+                    <input type="text" name="customer_name" list="customerNamesList" autocomplete="off" required
+                           value="{{ edit_o.customer.name if edit_o and edit_o.customer else '' }}">
+                    <datalist id="customerNamesList">
+                        {% for c in customer_list %}
+                        <option value="{{ c.name }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="grp">
+                    <label>ساعت</label>
+                    <input type="text" readonly style="width:80px; background:#f0f0f0;"
+                           value="{{ edit_o.time_str if edit_o else '(خودکار)' }}">
+                </div>
+                <div class="grp">
+                    <label>تاریخ</label>
+                    <div class="date-group">
+                        <select name="j_year">
+                            {% for y in range(today.year-3, today.year+2) %}
+                            <option value="{{ y }}" {% if (edit_o and edit_o.j_year == y) or (not edit_o and today.year == y) %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="j_month">
+                            {% for m in range(1,13) %}
+                            <option value="{{ m }}" {% if (edit_o and edit_o.j_month == m) or (not edit_o and today.month == m) %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="j_day">
+                            {% for d in range(1,32) %}
+                            <option value="{{ d }}" {% if (edit_o and edit_o.j_day == d) or (not edit_o and today.day == d) %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+            <table class="bom-table" id="bomTable">
+                <thead>
+                    <tr>
+                        <th class="row-no">شماره</th>
+                        <th>نام جنس</th>
+                        <th>گدام</th>
+                        <th>موجودی گدام</th>
+                        <th>واحداندازه گیری</th>
+                        <th>فی</th>
+                        <th>مقدار وزن</th>
+                        <th>تعداد</th>
+                        <th>مجموع</th>
+                        <th style="width:30px"></th>
+                    </tr>
+                </thead>
+                <tbody id="bomTableBody">
+                    {% if edit_lines %}
+                        {% for i, line in edit_lines.items() %}
+                        <tr>
+                            <td class="row-no">{{ loop.index }}</td>
+                            <td>
+                                <select name="row_item_{{ i }}" class="row-item-select">
+                                    <option value="">--</option>
+                                    {% for it in items %}
+                                    <option value="{{ it.id }}" {% if line.item_name == it.name %}selected{% endif %}>{{ it.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="row_stock_{{ i }}" class="row-stock">
+                                    <option value="">--</option>
+                                    {% for s in stocks %}
+                                    <option value="{{ s.id }}" {% if line.stock_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-available" name="row_available_{{ i }}" value="{{ line.available_qty }}" readonly style="background:#f5f5f5;"></td>
+                            <td>
+                                <select name="row_quantity_{{ i }}" class="row-quantity">
+                                    <option value="">--</option>
+                                    {% for u in units %}
+                                    <option value="{{ u.id }}" {% if line.quantity_id == u.id %}selected{% endif %}>{{ u.quantity }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-price" name="row_price_{{ i }}" value="{{ line.price }}"></td>
+                            <td><input type="number" step="0.01" class="row-amount" name="row_amount_{{ i }}" value="{{ line.amount }}"></td>
+                            <td><input type="number" step="0.01" class="row-count" name="row_count_{{ i }}" placeholder="تعداد (اختیاری)" value="{{ line.count_desc or '' }}"></td>
+                            <td><input type="text" class="row-total" readonly value="{{ '%.2f'|format(line.total) }}"></td>
+                            <td><a href="#" class="row-remove" title="حذف ردیف">✕</a></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td class="row-no">1</td>
+                            <td>
+                                <select name="row_item_1" class="row-item-select">
+                                    <option value="">--</option>
+                                    {% for it in items %}
+                                    <option value="{{ it.id }}">{{ it.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="row_stock_1" class="row-stock">
+                                    <option value="">--</option>
+                                    {% for s in stocks %}
+                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-available" name="row_available_1" readonly style="background:#f5f5f5;"></td>
+                            <td>
+                                <select name="row_quantity_1" class="row-quantity">
+                                    <option value="">--</option>
+                                    {% for u in units %}
+                                    <option value="{{ u.id }}">{{ u.quantity }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-price" name="row_price_1"></td>
+                            <td><input type="number" step="0.01" class="row-amount" name="row_amount_1"></td>
+                            <td><input type="number" step="0.01" class="row-count" name="row_count_1" placeholder="تعداد (اختیاری)"></td>
+                            <td><input type="text" class="row-total" readonly value="0.00"></td>
+                            <td><a href="#" class="row-remove" title="حذف ردیف">✕</a></td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            </div>
+
+            <template id="rowTemplate">
+                <tr>
+                    <td class="row-no"></td>
+                    <td>
+                        <select name="row_item_INDEX" class="row-item-select">
+                            <option value="">--</option>
+                            {% for it in items %}
+                            <option value="{{ it.id }}">{{ it.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="row_stock_INDEX" class="row-stock">
+                            <option value="">--</option>
+                            {% for s in stocks %}
+                            <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="row-available" name="row_available_INDEX" readonly style="background:#f5f5f5;"></td>
+                    <td>
+                        <select name="row_quantity_INDEX" class="row-quantity">
+                            <option value="">--</option>
+                            {% for u in units %}
+                            <option value="{{ u.id }}">{{ u.quantity }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="row-price" name="row_price_INDEX"></td>
+                    <td><input type="number" step="0.01" class="row-amount" name="row_amount_INDEX"></td>
+                    <td><input type="number" step="0.01" class="row-count" name="row_count_INDEX" placeholder="تعداد (اختیاری)"></td>
+                    <td><input type="text" class="row-total" readonly value="0.00"></td>
+                    <td><a href="#" class="row-remove" title="حذف ردیف">✕</a></td>
+                </tr>
+            </template>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.customer_orders') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="Search Information"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>مشتری</th>
+                <th>شماره فاکتور</th>
+                <th>ساعت</th>
+                <th>تاریخ</th>
+                <th>مجموع</th>
+                <th>حالت</th>
+                <th style="width:120px">عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="orderTableBody">
+            {% for r in records %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="order-customer">{{ r.customer.name if r.customer else '-' }}</td>
+                <td>{{ r.invoice_ref or '-' }}</td>
+                <td>{{ r.time_str or '-' }}</td>
+                <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td>{{ '{:,.0f}'.format(r.total_amount) }}</td>
+                <td class="status-{{ r.status }}">
+                    {% if r.status == 'pending' %}در انتظار
+                    {% elif r.status == 'invoiced' %}فاکتور شده
+                    {% else %}لغو شده{% endif %}
+                </td>
+                <td>
+                    {% if r.status == 'pending' %}
+                    <a href="{{ url_for('main.customer_orders', edit=r.id) }}" class="act-link">✏ ویرایش</a>
+                    <a href="{{ url_for('main.customer_order_cancel', id=r.id) }}" class="act-link"
+                       onclick="return confirm('سفارش لغو و رزرو موجودی آزاد شود؟')">⛔ لغو</a>
+                    {% endif %}
+                    <a href="{{ url_for('main.customer_order_delete', id=r.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">هیچ سفارشی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<script>
+var nextRowIndex = {{ (edit_lines.keys() | list | max + 1) if edit_lines else 2 }};
+
+function attachRowEvents(tr) {
+    var priceInput = tr.querySelector('.row-price');
+    var amountInput = tr.querySelector('.row-amount');
+    var countInput = tr.querySelector('.row-count');
+    var itemSelect = tr.querySelector('.row-item-select');
+    var removeLink = tr.querySelector('.row-remove');
+
+    function onChangeAny() {
+        recalcRow(tr);
+        maybeAddNewRow(tr);
+    }
+    priceInput.addEventListener('input', onChangeAny);
+    amountInput.addEventListener('input', onChangeAny);
+    countInput.addEventListener('input', onChangeAny);
+
+    itemSelect.addEventListener('change', function() {
+        var itemId = itemSelect.value;
+        maybeAddNewRow(tr);
+        if (!itemId) return;
+        fetch('/sale/orders/item-info/' + itemId)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!data.found) return;
+                if (data.stock_id) tr.querySelector('.row-stock').value = data.stock_id;
+                if (data.quantity_id) tr.querySelector('.row-quantity').value = data.quantity_id;
+                tr.querySelector('.row-available').value = data.available_qty;
+                recalcRow(tr);
+            });
+    });
+
+    removeLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        var body = document.getElementById('bomTableBody');
+        if (body.querySelectorAll('tr').length <= 1) return;
+        tr.remove();
+        renumberRows();
+    });
+}
+
+function renumberRows() {
+    var rows = document.querySelectorAll('#bomTableBody tr');
+    rows.forEach(function(row, idx) {
+        row.querySelector('.row-no').textContent = idx + 1;
+    });
+}
+
+function maybeAddNewRow(currentTr) {
+    var body = document.getElementById('bomTableBody');
+    var isLastRow = currentTr === body.lastElementChild;
+    var itemFilled = currentTr.querySelector('.row-item-select').value;
+    if (isLastRow && itemFilled) {
+        addNewRow();
+    }
+}
+
+function addNewRow() {
+    var template = document.getElementById('rowTemplate');
+    var clone = template.content.cloneNode(true);
+    var html = clone.querySelector('tr').outerHTML.replace(/INDEX/g, nextRowIndex);
+    nextRowIndex++;
+
+    var body = document.getElementById('bomTableBody');
+    var wrapper = document.createElement('tbody');
+    wrapper.innerHTML = html;
+    var newRow = wrapper.firstElementChild;
+    body.appendChild(newRow);
+    renumberRows();
+    attachRowEvents(newRow);
+}
+
+function recalcRow(tr) {
+    var amount = parseFloat(tr.querySelector('.row-amount').value) || 0;
+    var price = parseFloat(tr.querySelector('.row-price').value) || 0;
+    var countRaw = tr.querySelector('.row-count').value.trim();
+    var count = parseFloat(countRaw);
+    var total;
+    if (countRaw !== '' && !isNaN(count)) {
+        total = count * price;   // تعداد × فی (وقتی تعداد پر شده باشد)
+    } else {
+        total = amount * price;  // مقدار وزن × فی (حالت ساده، وقتی تعداد خالی است)
+    }
+    tr.querySelector('.row-total').value = total.toFixed(2);
+}
+
+document.querySelectorAll('#bomTableBody tr').forEach(function(tr) {
+    attachRowEvents(tr);
+});
+
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#orderTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.order-customer');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}ثبت واحدپولی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; display:flex; justify-content:space-between; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:18px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:100px; }
+    .field-row select { width:340px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 12px; text-align:right; }
+    table.cat-table td { padding:8px 12px; font-size:12px; border-bottom:1px solid #eee; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .status-active { color:#2e7d32; font-weight:bold; }
+    .status-inactive { color:#999; font-weight:bold; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">ثبت واحدپولی</div>
+    <div class="panel-body">
+        <form method="post">
+            <div class="field-row">
+                <select name="currency_id" required>
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for c in all_currencies %}
+                    <option value="{{ c.id }}" {% if edit_cur and edit_cur.id == c.id %}selected{% endif %}>
+                        {{ c.country_name }}----------------{{ c.code }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <label>واحدپولی</label>
+            </div>
+            <div class="field-row">
+                <select name="is_active">
+                    <option value="1" {% if edit_cur and edit_cur.is_active %}selected{% endif %}>فعال</option>
+                    <option value="0" {% if not edit_cur or not edit_cur.is_active %}selected{% endif %}>غیر فعال</option>
+                </select>
+                <label>فعال کردن</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.currency_registration') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="Search Information"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th style="width:60px">شماره</th>
+                <th>کشور</th>
+                <th>واحد پولی</th>
+                <th>فعال</th>
+                <th style="width:100px">ویرایش</th>
+            </tr>
+        </thead>
+        <tbody id="curTableBody">
+            {% for c in currency_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="cur-name">{{ c.country_name }}</td>
+                <td>{{ c.code }}</td>
+                <td class="{{ 'status-active' if c.is_active else 'status-inactive' }}">
+                    {{ 'Active' if c.is_active else 'In Active' }}
+                </td>
+                <td><a href="{{ url_for('main.currency_registration', edit=c.id) }}" class="act-link">✏ ویرایش</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">هیچ ارزی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#curTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.cur-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}پرداخت معاش{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; max-width:480px; margin:0 auto; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .info-row { display:flex; justify-content:space-between; padding:8px 4px; border-bottom:1px solid #eee; font-size:13px; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin:18px 0; }
+    .field-row label { font-size:13px; width:110px; }
+    .field-row select { flex:1; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:10px; }
+    .btn-save { background:#2e7d32; color:#fff; border:none; padding:8px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:8px 26px; border-radius:4px; text-decoration:none; display:inline-block; font-size:13px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">تایید پرداخت معاش</div>
+    <div class="panel-body">
+        <div class="info-row"><span>کارمند</span><b>{{ sc.employee.name if sc.employee else '-' }}</b></div>
+        <div class="info-row"><span>برج</span><b>{{ sc.j_year }}-{{ '%02d'|format(sc.j_month) }}</b></div>
+        <div class="info-row"><span>مبلغ قابل تادیه</span><b style="color:#c62828;">{{ '{:,.0f}'.format(sc.payable_amount) }} {{ sc.currency or '' }}</b></div>
+
+        <form method="post">
+            <div class="field-row">
+                <select name="bank_id" required>
+                    <option value="">-- انتخاب بانک/صندوق --</option>
+                    {% for b in bank_list %}
+                    <option value="{{ b.id }}">{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>پرداخت از</label>
+            </div>
+            <p style="font-size:11px; color:#888; text-align:center;">
+                با تایید، این مبلغ از بانک/صندوق انتخابی کسر شده و به‌عنوان «برد نقدی» در روزنامچه ثبت می‌شود.
+            </p>
+            <div class="btn-row">
+                <a href="{{ url_for('main.employee_salary_card') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">تایید و پرداخت</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

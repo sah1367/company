@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}صورت حساب تاریخ وار{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    .filter-body { padding:18px; background:#fff; display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    .date-group { display:flex; gap:4px; }
+    .date-group select { padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:7px 24px; border-radius:4px; cursor:pointer; font-size:13px; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .amt-neg { color:#c62828; }
+    .amt-pos { color:#2e7d32; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+</style>
+
+<a href="{{ url_for('main.customer_account', customer_id=customer.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">صورت حساب تاریخ وار — {{ customer.name }}</div>
+    <form method="get" class="filter-body">
+        <label style="font-size:12px;">از تاریخ:</label>
+        <div class="date-group">
+            <select name="from_year">
+                <option value="">--</option>
+                {% for y in range(today.year-3, today.year+2) %}
+                <option value="{{ y }}" {% if from_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <select name="from_month">
+                <option value="">--</option>
+                {% for m in range(1,13) %}
+                <option value="{{ m }}" {% if from_month == m %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                {% endfor %}
+            </select>
+            <select name="from_day">
+                <option value="">--</option>
+                {% for d in range(1,32) %}
+                <option value="{{ d }}" {% if from_day == d %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <label style="font-size:12px;">تا تاریخ:</label>
+        <div class="date-group">
+            <select name="to_year">
+                <option value="">--</option>
+                {% for y in range(today.year-3, today.year+2) %}
+                <option value="{{ y }}" {% if to_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <select name="to_month">
+                <option value="">--</option>
+                {% for m in range(1,13) %}
+                <option value="{{ m }}" {% if to_month == m %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                {% endfor %}
+            </select>
+            <select name="to_day">
+                <option value="">--</option>
+                {% for d in range(1,32) %}
+                <option value="{{ d }}" {% if to_day == d %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-blue">فیلتر</button>
+    </form>
+</div>
+
+<div class="panel">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>تاریخ</th>
+                <th>شرح</th>
+                <th>مبلغ</th>
+                <th>مانده</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ e.j_year }}-{{ '%02d'|format(e.j_month) }}-{{ '%02d'|format(e.j_day) }}</td>
+                <td>{{ e.desc }}</td>
+                <td class="{{ 'amt-neg' if e.amount < 0 else 'amt-pos' }}">{{ '{:,.0f}'.format(e.amount) }}</td>
+                <td style="font-weight:bold;">{{ '{:,.0f}'.format(e.balance) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">هیچ تراکنشی در این بازه یافت نشد</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

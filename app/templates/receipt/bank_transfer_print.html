@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>سند انتقال بین بانک‌ها #{{ bt.id }}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { background:#f0f0f0; padding:20px; }
+    .doc { max-width:750px; margin:0 auto; background:#fff; border:1px solid #1565c0; border-radius:6px; overflow:hidden; }
+
+    .brand-header {
+        background:#fff; border-bottom:2px solid #1565c0; padding:14px 18px;
+        display:flex; align-items:center; justify-content:space-between;
+    }
+    .brand-header .names { text-align:center; flex:1; }
+    .brand-header .names .fa-name { font-size:15px; font-weight:bold; color:#1565c0; }
+    .brand-header .names .en-name { font-size:11px; color:#1976d2; margin-top:2px; }
+    .brand-logo {
+        width:56px; height:56px; border-radius:50%; background:#1565c0; color:#fff;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        font-size:16px; font-weight:bold; line-height:1.1; flex-shrink:0;
+    }
+    .brand-logo small { font-size:8px; font-weight:normal; }
+
+    .title-bar { text-align:center; padding:8px; font-size:17px; font-weight:bold; color:#1565c0; border-bottom:1px solid #cfe0ee; }
+
+    table.header-table { width:100%; border-collapse:collapse; }
+    table.header-table td { border:1px solid #cfe0ee; padding:7px 12px; font-size:12.5px; }
+    .label-cell { background:#e3f2fd; text-align:right; font-weight:bold; color:#1565c0; width:150px; }
+    .value-cell { text-align:right; }
+
+    .flow-row { display:flex; align-items:stretch; padding:18px 16px; gap:10px; }
+    .flow-box {
+        flex:1; border:1px solid #cfe0ee; border-radius:6px; padding:14px; text-align:center;
+    }
+    .flow-box.from { background:#fdecea; border-color:#ef9a9a; }
+    .flow-box.to { background:#e8f5e9; border-color:#a5d6a7; }
+    .flow-box .flow-label { font-size:12px; font-weight:bold; margin-bottom:6px; }
+    .flow-box.from .flow-label { color:#c62828; }
+    .flow-box.to .flow-label { color:#2e7d32; }
+    .flow-box .bank-name { font-size:15px; font-weight:bold; color:#222; margin-bottom:4px; }
+    .flow-box .amount { font-size:16px; font-weight:bold; }
+    .flow-box.from .amount { color:#c62828; }
+    .flow-box.to .amount { color:#2e7d32; }
+    .flow-arrow { display:flex; align-items:center; justify-content:center; font-size:26px; color:#1565c0; padding:0 4px; }
+
+    table.summary { width:100%; border-collapse:collapse; margin-top:-1px; }
+    table.summary td { border:1px solid #cfe0ee; padding:7px 12px; font-size:12.5px; }
+    .summary-label { background:#e3f2fd; font-weight:bold; color:#1565c0; width:60%; text-align:right; }
+    .summary-value { text-align:right; font-weight:bold; }
+
+    .note-row { padding:10px 16px; font-size:12.5px; border-top:1px solid #cfe0ee; }
+
+    .sign-row { display:flex; justify-content:space-between; padding:30px 24px 18px 24px; font-size:12.5px; font-weight:bold; color:#333; }
+
+    @media print {
+        body { background:#fff; padding:0; }
+        .no-print { display:none; }
+        .doc { border:none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="no-print" style="text-align:center; margin-bottom:14px;">
+    <button onclick="window.print()" style="padding:8px 20px; background:#1565c0; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px;">چاپ سند</button>
+</div>
+
+<div class="doc">
+
+    <div class="brand-header">
+        <div class="brand-logo">{% if company and company.logo_filename %}<img src="{{ url_for('static', filename=company.logo_filename) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}TH<small>هرات</small>{% endif %}</div>
+        <div class="names">
+            <div class="fa-name">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+            <div class="en-name">{{ company.latin_name if company and company.latin_name else 'Tek Food and Non-Alcoholic Beverage Manufacturing' }}</div>
+        </div>
+        <div style="width:56px;"></div>
+    </div>
+
+    <div class="title-bar">سند انتقال بین بانک‌ها</div>
+
+    <table class="header-table">
+        <tr>
+            <td class="value-cell">{{ bt.id }}</td>
+            <td class="label-cell">شماره سند</td>
+            <td class="value-cell">{{ bt.j_year }}-{{ '%02d'|format(bt.j_month) }}-{{ '%02d'|format(bt.j_day) }}</td>
+            <td class="label-cell">تاریخ</td>
+        </tr>
+        <tr>
+            <td class="value-cell" colspan="3">{{ bt.created_by or '-' }}</td>
+            <td class="label-cell">ثبت‌شده توسط</td>
+        </tr>
+    </table>
+
+    <div class="flow-row">
+        <div class="flow-box from">
+            <div class="flow-label">بانک/صندوق مبدا (کسر)</div>
+            <div class="bank-name">{{ bt.from_bank.name if bt.from_bank else '-' }}</div>
+            <div class="amount">{{ '{:,.2f}'.format(bt.amount or 0) }} {{ bt.from_currency.code if bt.from_currency else '' }}</div>
+        </div>
+        <div class="flow-arrow">⟵</div>
+        <div class="flow-box to">
+            <div class="flow-label">بانک/صندوق مقصد (اضافه)</div>
+            <div class="bank-name">{{ bt.to_bank.name if bt.to_bank else '-' }}</div>
+            <div class="amount">{{ '{:,.2f}'.format(bt.converted_amount or 0) }} {{ bt.to_currency.code if bt.to_currency else '' }}</div>
+        </div>
+    </div>
+
+    <table class="summary">
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(bt.amount or 0) }} {{ bt.from_currency.code if bt.from_currency else '' }}</td>
+            <td class="summary-label">مبلغ انتقالی (مبدا)</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ bt.exchange_rate }}</td>
+            <td class="summary-label">نرخ تبدیل</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(bt.converted_amount or 0) }} {{ bt.to_currency.code if bt.to_currency else '' }}</td>
+            <td class="summary-label">مبلغ دریافتی (مقصد)</td>
+        </tr>
+    </table>
+
+    <div class="note-row">توضیحات: {{ bt.notes or '-' }}</div>
+
+    <div class="sign-row">
+        <div>امضاء تحویل‌دهنده: ___________________</div>
+        <div>امضاء تحویل‌گیرنده: ___________________</div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}حاضری کارمند{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; display:flex; justify-content:space-between; }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:140px; }
+    .field-row input, .field-row select { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .date-group { display:flex; gap:6px; width:280px; }
+    .date-group select { flex:1; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .act-link { color:#555; text-decoration:none; margin-left:8px; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .status-present { color:#2e7d32; font-weight:bold; }
+    .status-absent { color:#c62828; font-weight:bold; }
+    .status-leave { color:#f57f17; font-weight:bold; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>ثبت حاضری کارمند</span></div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_at %}<input type="hidden" name="at_id" value="{{ edit_at.id }}">{% endif %}
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="j_year">
+                        {% for y in range(today.year-2, today.year+1) %}
+                        <option value="{{ y }}" {% if (edit_at and edit_at.j_year==y) or (not edit_at and today.year==y) %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="j_month">
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if (edit_at and edit_at.j_month==m) or (not edit_at and today.month==m) %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="j_day">
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if (edit_at and edit_at.j_day==d) or (not edit_at and today.day==d) %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ</label>
+            </div>
+            <div class="field-row">
+                <select name="employee_id" required>
+                    <option value="">-- انتخاب کارمند --</option>
+                    {% for e in employee_list %}
+                    <option value="{{ e.id }}" {% if edit_at and edit_at.employee_id==e.id %}selected{% endif %}>{{ e.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>نام کارمند</label>
+            </div>
+            <div class="field-row">
+                <select name="status" id="statusSelect" onchange="toggleTimeFields()">
+                    <option value="present" {% if edit_at and edit_at.status=='present' %}selected{% endif %}>حاضر</option>
+                    <option value="absent" {% if edit_at and edit_at.status=='absent' %}selected{% endif %}>غایب</option>
+                    <option value="leave" {% if edit_at and edit_at.status=='leave' %}selected{% endif %}>رخصتی</option>
+                </select>
+                <label>وضعیت</label>
+            </div>
+            <div class="field-row" id="checkInRow">
+                <input type="time" name="check_in" value="{{ edit_at.check_in if edit_at else '07:30' }}">
+                <label>ساعت ورود</label>
+            </div>
+            <div class="field-row" id="checkOutRow">
+                <input type="time" name="check_out" value="{{ edit_at.check_out if edit_at else '17:30' }}">
+                <label>ساعت خروج</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="notes" value="{{ edit_at.notes if edit_at else '' }}">
+                <label>توضیحات</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.employee_attendance') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+        <p style="text-align:center; color:#888; font-size:11px; margin-top:10px;">
+            ساعت استاندارد کاری و معاش روزانه از «قرارداد کارمند» همان شخص خوانده می‌شود؛ اگر ساعت خروج بیشتر از ساعت استاندارد باشد،
+            اضافه‌کاری و معاش آن به‌طور خودکار حساب می‌شود.
+        </p>
+    </div>
+</div>
+
+<script>
+function toggleTimeFields() {
+    var isPresent = document.getElementById('statusSelect').value === 'present';
+    document.getElementById('checkInRow').style.display = isPresent ? 'flex' : 'none';
+    document.getElementById('checkOutRow').style.display = isPresent ? 'flex' : 'none';
+}
+document.addEventListener('DOMContentLoaded', toggleTimeFields);
+</script>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <form method="get"><input type="text" name="q" value="{{ search }}" placeholder="جستجوی نام کارمند"
+              style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;"></form>
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead><tr>
+            <th>شماره</th><th>تاریخ</th><th>نام کارمند</th><th>وضعیت</th>
+            <th>ورود</th><th>خروج</th><th>ساعت کارکرد</th><th>اضافه‌کاری</th><th>معاش روزانه</th><th>معاش کل</th>
+            <th style="width:100px">عملیات</th>
+        </tr></thead>
+        <tbody>
+            {% for r in records %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td>{{ r.employee.name if r.employee else '-' }}</td>
+                <td class="status-{{ r.status }}">{{ {'present':'حاضر','absent':'غایب','leave':'رخصتی'}.get(r.status, r.status) }}</td>
+                <td>{{ r.check_in or '-' }}</td>
+                <td>{{ r.check_out or '-' }}</td>
+                <td>{{ '%.1f'|format(r.worked_hours) if r.worked_hours else '-' }}</td>
+                <td style="{{ 'color:#c62828; font-weight:bold;' if r.overtime_hours }}">{{ '%.1f'|format(r.overtime_hours) if r.overtime_hours else '0' }}</td>
+                <td>{{ '{:,.0f}'.format(r.daily_salary) if r.daily_salary else '0' }}</td>
+                <td style="font-weight:bold; color:#2e7d32;">{{ '{:,.0f}'.format(r.total_pay) if r.total_pay else '0' }} {{ r.currency or '' }}</td>
+                <td>
+                    <a href="{{ url_for('main.employee_attendance', edit=r.id) }}" class="act-link">✏</a>
+                    <a href="{{ url_for('main.employee_attendance_delete', id=r.id) }}" class="act-link" onclick="return confirm('حذف شود؟')">🗑</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="11" style="text-align:center; padding:20px; color:#999;">هیچ رکوردی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

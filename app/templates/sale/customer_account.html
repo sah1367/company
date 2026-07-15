@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}حسابات مشتری{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+
+    .summary-panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; max-width:620px; }
+    .summary-panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:8px 14px; text-align:center; }
+    table.summary-table { width:100%; border-collapse:collapse; }
+    table.summary-table td { border:1px solid #ccc; padding:7px 14px; font-size:13px; }
+    .summary-value { text-align:center; }
+    .summary-label { background:#f0f0f0; font-weight:bold; text-align:right; width:260px; }
+    .balance-row td { background:#ffe97a !important; font-weight:bold; text-align:center; }
+
+    .actions-panel { border:1px solid #ccc; border-radius:4px; margin:30px 0 0 0; overflow:hidden; max-width:900px; }
+    .actions-head { background:#555; color:#fff; text-align:center; font-size:13px; font-weight:bold; padding:8px; }
+    .actions-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:0; }
+    .actions-grid a {
+        display:block; text-align:center; padding:14px 10px; background:#fff; border:1px solid #ddd;
+        color:#222; text-decoration:none; font-size:13px; font-weight:bold;
+    }
+    .actions-grid a:hover { background:#eaf4ff; color:#1e88e5; }
+    .actions-grid .empty-slot { background:#fafafa; border:1px solid #ddd; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">حسابات مشتری</div>
+</div>
+
+<div class="summary-panel">
+    <div class="summary-panel-head">خلاصه حسابات مشتری</div>
+    <table class="summary-table">
+        <tr>
+            <td class="summary-value">{{ customer.id }}</td>
+            <td class="summary-label">نمبرشناسائی</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ customer.book_no or '' }}</td>
+            <td class="summary-label">شماره کتابچه</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ customer.name }}</td>
+            <td class="summary-label">مشتری</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ customer.phone or '' }}</td>
+            <td class="summary-label">تلفن</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ customer.address or '0' }}</td>
+            <td class="summary-label">آدرس</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(total_invoice) }}</td>
+            <td class="summary-label">مجموع فاکتور</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(total_our_purchases) }}</td>
+            <td class="summary-label">مجموع خریداری‌های ما</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(total_transport) }}</td>
+            <td class="summary-label">هزینه های حمل ونقل پرداخت شده ما</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(total_payments) }}</td>
+            <td class="summary-label">مجموع پرداختی ها</td>
+        </tr>
+        <tr>
+            <td class="summary-value">{{ '{:,.2f}'.format(total_returns) }}</td>
+            <td class="summary-label">مجموع برگشتی ها و خریداریها</td>
+        </tr>
+        <tr class="balance-row">
+            <td>{{ '{:,.0f}'.format(balance) }}</td>
+            <td>AFN</td>
+        </tr>
+    </table>
+</div>
+
+<div class="actions-panel">
+    <div class="actions-head">جزئیات حسابات مشتری</div>
+    <div class="actions-grid">
+        <a href="{{ url_for('main.customer_itemized_statement', customer_id=customer.id) }}">صورت حساب جزوار مشتری</a>
+        <a href="{{ url_for('main.cash_transaction', party_type='customer', party_id=customer.id) }}">پرداخت مشتری</a>
+        <a href="{{ url_for('main.customer_payments_report', customer_id=customer.id) }}">گزارشات پرداختی</a>
+        <a href="{{ url_for('main.customer_current_account', customer_id=customer.id) }}">حساب جاری</a>
+        <div class="empty-slot"></div>
+        <a href="{{ url_for('main.customer_invoice_statement', customer_id=customer.id) }}">صورت حساب فاکتور وار</a>
+        <a href="{{ url_for('main.customer_summary', customer_id=customer.id) }}">صورت حساب کلی مشتری</a>
+        <a href="{{ url_for('main.customer_date_range', customer_id=customer.id) }}">صورت حساب تاریخ وار</a>
+    </div>
+</div>
+{% endblock %}

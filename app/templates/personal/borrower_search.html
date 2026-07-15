@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}حسابات قرضه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:12px 16px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:20px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; font-weight:bold; }
+    .field-row input { width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:10px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">حسابات قرضه</div>
+    <div class="panel-body">
+        <form method="get" action="{{ url_for('main.borrower_account', borrower_id=0) }}" id="searchForm" onsubmit="return false;">
+            <div class="field-row">
+                <input type="text" id="borrowerNameInput" list="borrowerNamesList" autocomplete="off" placeholder="">
+                <datalist id="borrowerNamesList">
+                    {% for b in borrower_list %}
+                    <option value="{{ b.name }}" data-id="{{ b.id }}">
+                    {% endfor %}
+                </datalist>
+                <label>نام قرضه دهنده /گیرنده</label>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn-blue" onclick="goToDetails()">جزئیات</button>
+                <button type="button" class="btn-blue" onclick="goToDetails()">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+var borrowerMap = {};
+{% for b in borrower_list %}
+borrowerMap["{{ b.name }}"] = {{ b.id }};
+{% endfor %}
+
+function goToDetails() {
+    var name = document.getElementById('borrowerNameInput').value.trim();
+    var id = borrowerMap[name];
+    if (!id) {
+        alert('لطفاً یک قرضه معتبر از لیست انتخاب کنید.');
+        return;
+    }
+    window.location.href = '/personal/borrower-account/' + id;
+}
+</script>
+{% endblock %}

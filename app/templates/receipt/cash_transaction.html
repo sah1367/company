@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}برد و رسید نقدی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; display:flex; justify-content:space-between; align-items:center; }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:130px; }
+    .field-row input, .field-row select, .field-row textarea { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; font-family:Tahoma; }
+    .field-row input[readonly] { background:#f5f5f5; color:#555; }
+    .date-group { display:flex; gap:6px; width:280px; }
+    .date-group select { flex:1; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .footer-note { padding:8px 14px; font-size:12px; color:#555; background:#f7f7f7; }
+    .badge-payment { color:#e53935; font-weight:bold; }
+    .badge-receipt { color:#2e7d32; font-weight:bold; }
+    .balance-box { width:280px; min-height:36px; padding:6px 10px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px; }
+    .balance-line { display:flex; justify-content:space-between; padding:2px 0; }
+    .balance-pos { color:#2e7d32; font-weight:bold; }
+    .balance-neg { color:#e53935; font-weight:bold; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>برد و رسید نقدی مشتریان</span></div>
+    <div class="panel-body">
+        <form method="post" id="ctForm">
+            {% if edit_ct %}
+            <input type="hidden" name="ct_id" value="{{ edit_ct.id }}">
+            {% endif %}
+
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="j_year">
+                        {% for y in range(today.year-3, today.year+2) %}
+                        <option value="{{ y }}" {% if (edit_ct and edit_ct.j_year == y) or (not edit_ct and today.year == y) %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="j_month">
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if (edit_ct and edit_ct.j_month == m) or (not edit_ct and today.month == m) %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="j_day">
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if (edit_ct and edit_ct.j_day == d) or (not edit_ct and today.day == d) %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ</label>
+            </div>
+
+            <div class="field-row">
+                <select name="party_type" id="partyType" onchange="onPartyTypeChange()">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for ptype, plabel in party_type_labels.items() %}
+                    <option value="{{ ptype }}" {% if (edit_ct and edit_ct.party_type == ptype) or (not edit_ct and prefill_party_type == ptype) %}selected{% endif %}>{{ plabel }}</option>
+                    {% endfor %}
+                </select>
+                <label>حسابدار</label>
+            </div>
+
+            <div class="field-row" id="partyBoxRow">
+                <select name="party_id" id="partyId" onchange="onPartyChange()">
+                    <option value="">-- اول حسابدار را انتخاب کنید --</option>
+                    {% for pid, pname in edit_party_list %}
+                    <option value="{{ pid }}" {% if (edit_ct and edit_ct.party_id == pid) or (not edit_ct and prefill_party_id == pid) %}selected{% endif %}>{{ pname }}</option>
+                    {% endfor %}
+                </select>
+                <label id="partyBoxLabel">{{ party_type_labels.get(edit_ct.party_type if edit_ct else prefill_party_type) or 'طرف حساب' }}</label>
+            </div>
+
+            <div class="field-row">
+                <select name="currency_id">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for c in active_currencies %}
+                    <option value="{{ c.id }}" {% if edit_ct and edit_ct.currency_id == c.id %}selected{% endif %}>{{ c.code }} — {{ c.country_name }}</option>
+                    {% endfor %}
+                </select>
+                <label>نوعیت پول</label>
+            </div>
+
+            <div class="field-row">
+                <select name="transaction_type">
+                    <option value="">-- انتخاب کنید --</option>
+                    <option value="payment" {% if edit_ct and edit_ct.transaction_type == 'payment' %}selected{% endif %}>برد (پرداخت به طرف)</option>
+                    <option value="receipt" {% if edit_ct and edit_ct.transaction_type == 'receipt' %}selected{% endif %}>رسید (دریافت از طرف)</option>
+                </select>
+                <label>نوعیت حساب</label>
+            </div>
+
+            <div class="field-row">
+                <div class="balance-box" id="currentBalanceBox">پس از انتخاب حسابدار نمایش داده می‌شود</div>
+                <label>حساب جاری</label>
+            </div>
+
+            <div class="field-row">
+                <input type="number" step="0.01" name="amount" required value="{{ edit_ct.amount if edit_ct else '' }}">
+                <label>مقدار</label>
+            </div>
+
+            <div class="field-row">
+                <input type="text" name="check_no" value="{{ edit_ct.check_no if edit_ct else '' }}">
+                <label>نمبر چک</label>
+            </div>
+
+            <div class="field-row">
+                <select name="bank_id">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for b in bank_list %}
+                    <option value="{{ b.id }}" {% if edit_ct and edit_ct.bank_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>بانک</label>
+            </div>
+
+            <div class="field-row">
+                <textarea name="notes" rows="3">{{ edit_ct.notes if edit_ct else '' }}</textarea>
+                <label>توضیحات</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.cash_transaction') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="جستجو تاریخ یا نام"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>تاریخ</th>
+                <th>معامله‌کننده</th>
+                <th>نوعیت</th>
+                <th>نوعیت پول</th>
+                <th>مقدار</th>
+                <th>نمبر چک</th>
+                <th>بانک</th>
+                <th>حساب جاری</th>
+                <th style="width:90px">عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="ctTableBody">
+            {% for r in records %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="ct-date">{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td class="ct-name">{{ r.party_name or '-' }}</td>
+                <td>
+                    {% if r.transaction_type == 'payment' %}
+                    <span class="badge-payment">برد</span>
+                    {% else %}
+                    <span class="badge-receipt">رسید</span>
+                    {% endif %}
+                </td>
+                <td>{{ r.currency.code if r.currency else '-' }}</td>
+                <td>{{ '{:,.0f}'.format(r.amount) }}</td>
+                <td>{{ r.check_no or '-' }}</td>
+                <td>{{ r.bank.name if r.bank else '-' }}</td>
+                {% set bal = running_balances.get(r.id) %}
+                <td style="font-weight:bold; color:{{ 'red' if bal and bal < 0 else '#2e7d32' }};">
+                    {{ '{:,.0f}'.format(bal) if bal is not none else '-' }}
+                </td>
+                <td>
+                    <a href="{{ url_for('main.cash_transaction', edit=r.id) }}" class="act-link">✏ ویرایش</a>
+                    <a href="{{ url_for('main.cash_transaction_print', id=r.id) }}" class="act-link" target="_blank">🖶 چاپ</a>
+                    <a href="{{ url_for('main.cash_transaction_delete', id=r.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="10" style="text-align:center; padding:20px; color:#999;">هیچ رکوردی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="footer-note">تعداد اطلاعات ذخیره شده: {{ records|length }}</div>
+</div>
+
+<script>
+var PARTY_TYPE_LABELS = {{ party_type_labels|tojson }};
+
+function onPartyTypeChange() {
+    var partyType = document.getElementById('partyType').value;
+    var partySelect = document.getElementById('partyId');
+    var partyLabel = document.getElementById('partyBoxLabel');
+    var balanceBox = document.getElementById('currentBalanceBox');
+
+    balanceBox.value = '';
+    partySelect.innerHTML = '<option value="">در حال بارگذاری...</option>';
+
+    if (!partyType) {
+        partySelect.innerHTML = '<option value="">-- اول حسابدار را انتخاب کنید --</option>';
+        partyLabel.textContent = 'طرف حساب';
+        return;
+    }
+
+    partyLabel.textContent = PARTY_TYPE_LABELS[partyType] || 'طرف حساب';
+
+    fetch('{{ url_for("main.cash_transaction_parties", party_type="__TYPE__") }}'.replace('__TYPE__', partyType))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            var options = '<option value="">-- انتخاب کنید --</option>';
+            if (data.parties.length === 0) {
+                options = '<option value="">موردی یافت نشد</option>';
+            } else {
+                data.parties.forEach(function(p) {
+                    options += '<option value="' + p.id + '">' + p.name + '</option>';
+                });
+            }
+            partySelect.innerHTML = options;
+        });
+}
+
+function onPartyChange() {
+    var partyType = document.getElementById('partyType').value;
+    var partyId = document.getElementById('partyId').value;
+    var balanceBox = document.getElementById('currentBalanceBox');
+
+    balanceBox.innerHTML = '';
+    if (!partyType || !partyId) return;
+
+    balanceBox.textContent = 'در حال محاسبه...';
+    fetch('{{ url_for("main.cash_transaction_party_balance") }}?party_type=' + partyType + '&party_id=' + partyId)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (!data.balances || data.balances.length === 0) {
+                balanceBox.textContent = 'مانده‌ای ثبت نشده (صفر)';
+                return;
+            }
+            var html = '';
+            data.balances.forEach(function(b) {
+                var cls = b.amount >= 0 ? 'balance-pos' : 'balance-neg';
+                html += '<div class="balance-line"><span>' + b.code + '</span><span class="' + cls + '">' +
+                        b.amount.toLocaleString('en-US', {maximumFractionDigits: 2}) + '</span></div>';
+            });
+            balanceBox.innerHTML = html;
+        });
+}
+
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#ctTableBody tr');
+    rows.forEach(function(row) {
+        var nameCell = row.querySelector('.ct-name');
+        var dateCell = row.querySelector('.ct-date');
+        var text = ((nameCell ? nameCell.textContent : '') + ' ' + (dateCell ? dateCell.textContent : '')).toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+    });
+});
+
+// اگر صفحه در حالت ویرایش بار شده، مانده فعلی را هم نشان بده
+{% if edit_ct %}
+window.addEventListener('DOMContentLoaded', function() {
+    onPartyChange();
+});
+{% elif prefill_party_type and prefill_party_id %}
+window.addEventListener('DOMContentLoaded', function() {
+    onPartyChange();
+});
+{% endif %}
+</script>
+{% endblock %}

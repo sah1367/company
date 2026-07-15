@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}حسابات کارمند{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:12px 16px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:20px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; }
+    .field-row input { width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:10px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">حسابات کارمند</div>
+    <div class="panel-body">
+        <form method="get" id="searchForm" onsubmit="return false;">
+            <div class="field-row">
+                <input type="text" id="employeeNameInput" list="employeeNamesList" autocomplete="off" placeholder="">
+                <datalist id="employeeNamesList">
+                    {% for e in employee_list %}
+                    <option value="{{ e.name }}" data-id="{{ e.id }}">
+                    {% endfor %}
+                </datalist>
+                <label>نام کارمند</label>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn-blue" onclick="goToDetails()">جزئیات</button>
+                <button type="button" class="btn-blue" onclick="goToDetails()">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+var employeeMap = {};
+{% for e in employee_list %}
+employeeMap["{{ e.name }}"] = {{ e.id }};
+{% endfor %}
+
+function goToDetails() {
+    var name = document.getElementById('employeeNameInput').value.trim();
+    var id = employeeMap[name];
+    if (!id) {
+        alert('لطفاً یک کارمند معتبر از لیست انتخاب کنید.');
+        return;
+    }
+    window.location.href = '/employees/account/' + id;
+}
+</script>
+{% endblock %}

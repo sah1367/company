@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}راپورهای صرافی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:40px 20px; display:flex; justify-content:center; }
+
+    .report-card { width:600px; max-width:100%; border:1px solid #dbe7f2; border-radius:4px; background:#f5f9fd; padding:18px; }
+    .report-head {
+        background:#1565c0; color:#fff; text-align:center; font-size:16px; font-weight:bold;
+        padding:12px; border-radius:4px; margin-bottom:22px;
+    }
+    .report-btn {
+        display:block; text-align:center; background:#1976d2; color:#fff; text-decoration:none;
+        padding:11px 6px; border-radius:20px; font-size:13px; font-weight:bold;
+        box-shadow:0 1px 3px rgba(0,0,0,0.2);
+    }
+    .report-btn:hover { background:#0d47a1; }
+
+    .report-row-single { max-width:320px; margin:14px auto 0; }
+    .report-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    .report-grid.two-col { grid-template-columns:1fr 1fr; max-width:420px; margin:14px auto 0; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>راپورهای صرافی</span>
+        <a href="{{ url_for('main.reports') }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+    <div class="panel-body">
+        <div class="report-card">
+            <div class="report-head">راپور کلی حسابات مشتریان</div>
+
+            <div class="report-grid">
+                <a href="{{ url_for('main.report_page', slug='qard_hasana') }}" class="report-btn">
+                    {{ exchange_pages['qard_hasana'] }}
+                </a>
+                <a href="{{ url_for('main.report_page', slug='vendors_report') }}" class="report-btn">
+                    {{ exchange_pages['vendors_report'] }}
+                </a>
+                <a href="{{ url_for('main.report_page', slug='customer_exchange_total') }}" class="report-btn">
+                    {{ exchange_pages['customer_exchange_total'] }}
+                </a>
+            </div>
+
+            <div class="report-grid two-col">
+                <a href="{{ url_for('main.report_page', slug='customer_claims_by_category') }}" class="report-btn">
+                    {{ exchange_pages['customer_claims_by_category'] }}
+                </a>
+                <a href="{{ url_for('main.report_page', slug='employees_report') }}" class="report-btn">
+                    {{ exchange_pages['employees_report'] }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

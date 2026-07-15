@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}کتگوری عواید متفرقه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .form-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:18px; }
+    .form-row label { font-size:13px; color:#333; white-space:nowrap; }
+    .form-row input { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 12px; text-align:right; }
+    table.cat-table td { padding:8px 12px; font-size:12px; border-bottom:1px solid #eee; }
+    .act-link { color:#555; text-decoration:none; margin-left:10px; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">ثبت کتگوری عواید متفرقه</div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_rc %}
+            <input type="hidden" name="rc_id" value="{{ edit_rc.id }}">
+            {% endif %}
+            <div class="form-row">
+                <input type="text" name="name" required value="{{ edit_rc.name if edit_rc else '' }}">
+                <label>نام کتگوری</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.revenue_category') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="Search Information"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px; margin-right:auto;">
+    </div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th style="width:60px">شماره</th>
+                <th>نام کتگوری</th>
+                <th style="width:80px">ویرایش</th>
+                <th style="width:80px">حذف</th>
+            </tr>
+        </thead>
+        <tbody id="catTableBody">
+            {% for c in categories %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="cat-name">{{ c.name }}</td>
+                <td><a href="{{ url_for('main.revenue_category', edit=c.id) }}" class="act-link">✏ ویرایش</a></td>
+                <td><a href="{{ url_for('main.revenue_category_delete', id=c.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑 حذف</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">هیچ کتگوری ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#catTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.cat-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

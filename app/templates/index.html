@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}روزنامچه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:16px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .day-nav { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .day-nav a {
+        background:#fff; color:#1e88e5; text-decoration:none; padding:4px 12px;
+        border-radius:4px; font-weight:bold;
+    }
+    .day-nav span { color:#fff; }
+
+    table.journal-table { width:100%; border-collapse:collapse; font-size:12px; }
+    table.journal-table th {
+        padding:7px 8px; text-align:center; white-space:nowrap; color:#fff; background:#1e88e5;
+    }
+    table.journal-table th.col-in { background:#7cb342; }
+    table.journal-table th.col-out { background:#fb8c00; }
+    table.journal-table td { padding:6px 8px; border-bottom:1px solid #eee; text-align:center; white-space:nowrap; }
+    table.journal-table td.desc-cell { text-align:right; white-space:normal; max-width:260px; }
+    table.journal-table tbody tr:hover { background:#f7fbff; }
+    .num-in { color:#2e7d32; font-weight:bold; }
+    .num-out { color:#c62828; font-weight:bold; }
+
+    .cashbox-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; margin-top:6px; }
+    .cashbox-card { border:1px solid #ccc; border-radius:4px; overflow:hidden; }
+    .cashbox-title { background:#555; color:#fff; text-align:center; font-size:13px; font-weight:bold; padding:7px; }
+    table.cashbox-table { width:100%; border-collapse:collapse; }
+    table.cashbox-table th { font-size:12px; padding:8px; text-align:center; }
+    table.cashbox-table td { font-size:13px; padding:9px; text-align:center; font-weight:bold; }
+    .th-yesterday { background:#90caf9; }
+    .th-in { background:#a5d6a7; }
+    .th-out { background:#fff59d; }
+    .th-balance { background:#c8e6c9; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>روزنامچه</span>
+        <div class="day-nav">
+            <a href="{{ url_for('main.index', jy=prev_j.year, jm=prev_j.month, jd=prev_j.day) }}">◀ روز قبل</a>
+            <span>{{ jy }}-{{ '%02d'|format(jm) }}-{{ '%02d'|format(jd) }}</span>
+            <a href="{{ url_for('main.index', jy=next_j.year, jm=next_j.month, jd=next_j.day) }}">روز بعد ▶</a>
+            <a href="{{ url_for('main.index', jy=today.year, jm=today.month, jd=today.day) }}">امروز</a>
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+    <table class="journal-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>تاریخ</th>
+                <th>واحد پولی</th>
+                <th>مرجع</th>
+                <th>توضیحات</th>
+                <th>بانک</th>
+                {% for c in currencies %}
+                <th class="col-in">رسیدگی {{ c }}</th>
+                <th class="col-out">بردگی {{ c }}</th>
+                {% endfor %}
+                <th>کاربر</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td>{{ r.currency }}</td>
+                <td>{{ r.reference }}</td>
+                <td class="desc-cell">{{ r.description }}</td>
+                <td>{{ r.bank }}</td>
+                {% for c in currencies %}
+                <td class="num-in">{{ '{:,.0f}'.format(r.in_amt) if r.currency == c and r.in_amt else 0 }}</td>
+                <td class="num-out">{{ '{:,.0f}'.format(r.out_amt) if r.currency == c and r.out_amt else 0 }}</td>
+                {% endfor %}
+                <td>{{ r.user }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="{{ 6 + currencies|length * 2 + 1 }}" style="text-align:center; padding:24px; color:#999;">
+                هیچ تراکنشی در این تاریخ ثبت نشده
+            </td></tr>
+            {% endfor %}
+        </tbody>
+        {% if rows %}
+        <tfoot>
+            <tr style="background:#eef4fb; font-weight:bold;">
+                <td colspan="6">مجموعه</td>
+                {% for c in currencies %}
+                <td class="num-in">{{ '{:,.0f}'.format(cashbox[c].in) }}</td>
+                <td class="num-out">{{ '{:,.0f}'.format(cashbox[c].out) }}</td>
+                {% endfor %}
+                <td></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+    </div>
+</div>
+
+<div class="cashbox-grid">
+    {% for c in currencies %}
+    <div class="cashbox-card">
+        <div class="cashbox-title">صندوق مرکزی ({{ c }})</div>
+        <table class="cashbox-table">
+            <tr>
+                <th class="th-balance">الباقی</th>
+                <th class="th-out">بردگی</th>
+                <th class="th-in">رسیدگی</th>
+                <th class="th-yesterday">دخل دیروز</th>
+            </tr>
+            <tr>
+                <td style="background:#e8f5e9;">{{ '{:,.0f}'.format(cashbox[c].balance) }}</td>
+                <td style="background:#fffde7;">{{ '{:,.0f}'.format(cashbox[c].out) }}</td>
+                <td style="background:#e3f2fd;">{{ '{:,.0f}'.format(cashbox[c].in) }}</td>
+                <td style="background:#e1f0ff;">{{ '{:,.0f}'.format(cashbox[c].yesterday) }}</td>
+            </tr>
+        </table>
+    </div>
+    {% endfor %}
+    {% if not currencies %}
+    <p style="color:#999; padding:10px;">هنوز هیچ ارزی در تراکنش‌های سیستم ثبت نشده است.</p>
+    {% endif %}
+</div>
+{% endblock %}

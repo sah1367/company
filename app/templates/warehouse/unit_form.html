@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ 'ویرایش واحد' if unit else 'واحد جدید' }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width:500px">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">{{ 'ویرایش واحد اندازه‌گیری' if unit else 'ثبت واحد اندازه‌گیری جدید' }}</h5>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">نام واحد *</label>
+          <input type="text" name="quantity" class="form-control" required
+                 placeholder="مثال: کیلوگرام، لیتر، دانه، بسته"
+                 value="{{ unit.quantity if unit else '' }}">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success">ذخیره</button>
+          <a href="{{ url_for('main.units') }}" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

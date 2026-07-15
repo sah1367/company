@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}گزارش مفاد و ضرر{% endblock %}
+{% block content %}
+<style>
+    .pl-wrap { padding:10px 0; }
+    .pl-head {
+        background:linear-gradient(135deg,#1e9166,#16794f); color:#fff; border-radius:10px;
+        padding:22px 26px; text-align:center; margin-bottom:20px;
+    }
+    .pl-head .company { font-size:16px; font-weight:bold; margin-bottom:10px; }
+    .pl-head .title { font-size:19px; font-weight:bold; margin-bottom:16px; }
+    .pl-head .actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+    .pl-head .actions button {
+        background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.4);
+        padding:7px 18px; border-radius:20px; font-size:13px; cursor:pointer;
+    }
+    .pl-head .actions button:hover { background:rgba(255,255,255,0.28); }
+    .pl-head a.back { color:#fff; font-size:12px; text-decoration:none; opacity:0.85; display:block; margin-top:10px; }
+
+    .pl-toolbar { display:flex; justify-content:flex-end; margin-bottom:12px; }
+    .pl-search { position:relative; max-width:280px; width:100%; }
+    .pl-search input {
+        width:100%; padding:9px 14px; border:1px solid #dfe6e2; border-radius:20px; font-size:13px;
+        box-sizing:border-box;
+    }
+
+    .pl-table-wrap { border:1px solid #e2ede8; border-radius:8px; overflow:hidden; }
+    table.pl-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+    table.pl-table th {
+        background:#e9f5ef; color:#1b6b46; font-weight:bold; padding:12px 10px; text-align:center;
+    }
+    table.pl-table td { padding:11px 10px; text-align:center; border-top:1px solid #eef4f1; }
+    table.pl-table tr:nth-child(even) td { background:#fafdfc; }
+    table.pl-table td.name { text-align:right; font-weight:600; color:#333; }
+    td.profit-pos { color:#1b6b46; font-weight:bold; direction:ltr; }
+    td.profit-neg { color:#c62828; font-weight:bold; direction:ltr; }
+    td.num { direction:ltr; }
+
+    .pl-total-row td {
+        background:#e9f5ef !important; font-weight:bold; font-size:14.5px; color:#1b6b46;
+        border-top:2px solid #1e9166;
+    }
+    .pl-empty { text-align:center; color:#999; padding:40px 0; }
+</style>
+
+<div class="pl-wrap">
+    <div class="pl-head">
+        <div class="company">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+        <div class="title">✅ گزارش مفاد و ضرر</div>
+        <div class="actions">
+            <button onclick="window.print()">🖨️ چاپ / PDF</button>
+        </div>
+        <a class="back" href="{{ back_url }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+
+    <div class="pl-toolbar">
+        <form class="pl-search" method="get">
+            <input type="text" name="q" value="{{ search }}" placeholder="جستجو نام جنس...">
+        </form>
+    </div>
+
+    <div class="pl-table-wrap">
+        <table class="pl-table">
+            <thead>
+                <tr>
+                    <th>شماره</th>
+                    <th>نام جنس</th>
+                    <th>تعداد</th>
+                    <th>فروشات</th>
+                    <th>قیمت تمام</th>
+                    <th>هزینه</th>
+                    <th>مفاد</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.no }}</td>
+                    <td class="name">{{ r.name }}</td>
+                    <td class="num">{{ '{:,.4f}'.format(r.qty) }}</td>
+                    <td class="num">{{ '{:,.4f}'.format(r.sales) }}</td>
+                    <td class="num">{{ '{:,.4f}'.format(r.unit_cost) }}</td>
+                    <td class="num">{{ '{:,.4f}'.format(r.cost_total) }}</td>
+                    <td class="{{ 'profit-neg' if r.profit < 0 else 'profit-pos' }}">
+                        {{ '{:,.4f}'.format(r.profit|abs) }}{{ '-' if r.profit < 0 else '' }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="pl-empty">هیچ جنسی با فروش ثبت‌شده یافت نشد</td></tr>
+                {% endfor %}
+            </tbody>
+            {% if rows %}
+            <tfoot>
+                <tr class="pl-total-row">
+                    <td colspan="6">مجموع مفاد ناخالص</td>
+                    <td class="num">
+                        {{ '{:,.2f}'.format(grand_total_profit|abs) }}{{ '-' if grand_total_profit < 0 else '' }}
+                    </td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

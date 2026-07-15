@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}گزارش‌های گدام{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:40px 20px; display:flex; justify-content:center; }
+
+    .report-card { width:900px; max-width:100%; border:1px solid #dbe7f2; border-radius:4px; background:#f5f9fd; padding:18px; }
+    .report-head {
+        background:#1565c0; color:#fff; text-align:center; font-size:16px; font-weight:bold;
+        padding:12px; border-radius:4px; margin-bottom:22px;
+    }
+    .report-btn {
+        display:block; text-align:center; background:#1976d2; color:#fff; text-decoration:none;
+        padding:11px 6px; border-radius:20px; font-size:13px; font-weight:bold;
+        box-shadow:0 1px 3px rgba(0,0,0,0.2);
+    }
+    .report-btn:hover { background:#0d47a1; }
+    .report-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+    .report-grid.last-row { grid-template-columns:1fr 1fr; max-width:460px; margin:0 auto; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>گزارش‌های گدام</span>
+        <a href="{{ url_for('main.reports') }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+    <div class="panel-body">
+        <div class="report-card">
+            <div class="report-head">گزارش گدامهای سیستم</div>
+
+            <div class="report-grid">
+                <a href="{{ url_for('main.report_page', slug='stock_transfer_details') }}" class="report-btn">{{ warehouse_pages['stock_transfer_details'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='category_stock') }}" class="report-btn">{{ warehouse_pages['category_stock'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='stock_out_report') }}" class="report-btn">{{ warehouse_pages['stock_out_report'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='stock_in_report') }}" class="report-btn">{{ warehouse_pages['stock_in_report'] }}</a>
+
+                <a href="{{ url_for('main.report_page', slug='inactive_items_report') }}" class="report-btn">{{ warehouse_pages['inactive_items_report'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='stock_total_all') }}" class="report-btn">{{ warehouse_pages['stock_total_all'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='opening_balance_report') }}" class="report-btn">{{ warehouse_pages['opening_balance_report'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='customer_item_claims') }}" class="report-btn">{{ warehouse_pages['customer_item_claims'] }}</a>
+
+                <a href="{{ url_for('main.report_page', slug='item_claims_credit') }}" class="report-btn">{{ warehouse_pages['item_claims_credit'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='stock_by_warehouse') }}" class="report-btn">{{ warehouse_pages['stock_by_warehouse'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='stock_total_all_2') }}" class="report-btn">{{ warehouse_pages['stock_total_all_2'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='vendor_item_claims') }}" class="report-btn">{{ warehouse_pages['vendor_item_claims'] }}</a>
+            </div>
+
+            <div class="report-grid last-row">
+                <a href="{{ url_for('main.report_page', slug='production_report') }}" class="report-btn">{{ warehouse_pages['production_report'] }}</a>
+                <a href="{{ url_for('main.report_page', slug='stock_value') }}" class="report-btn">{{ warehouse_pages['stock_value'] }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

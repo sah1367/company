@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}سرمایه نقدی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:24px 20px; }
+
+    .totals-box {
+        max-width:700px; margin:0 auto 30px; border:1px solid #dbe7f2; border-radius:6px;
+        background:#f5f9fd; overflow:hidden;
+    }
+    .totals-head {
+        background:#1565c0; color:#fff; text-align:center; font-size:15px; font-weight:bold;
+        padding:11px;
+    }
+    .totals-table { width:100%; border-collapse:collapse; }
+    .totals-table td { padding:12px 16px; border-bottom:1px solid #e0ecf7; font-size:15px; }
+    .totals-table tr:last-child td { border-bottom:none; }
+    .totals-table td.code { font-weight:bold; color:#1565c0; text-align:right; width:100px; }
+    .totals-table td.amount { text-align:left; font-weight:bold; }
+    .amount.negative { color:#c62828; }
+    .amount.positive { color:#2e7d32; }
+
+    .empty-msg { text-align:center; color:#888; padding:20px; }
+
+    .bank-table { width:100%; max-width:900px; margin:0 auto; border-collapse:collapse; }
+    .bank-table th, .bank-table td { border:1px solid #dde7f0; padding:9px 12px; font-size:13.5px; text-align:center; }
+    .bank-table th { background:#eef4fb; color:#1565c0; }
+    .bank-table td.name { text-align:right; font-weight:bold; }
+    .bank-table a { color:#1565c0; text-decoration:none; }
+    .bank-table a:hover { text-decoration:underline; }
+    .section-title { font-size:14px; font-weight:bold; color:#444; margin:26px 0 10px; text-align:center; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>سرمایه نقدی — مجموع بانک‌ها و صندوق‌ها</span>
+        <a href="{{ back_url }}">◀ بازگشت</a>
+    </div>
+    <div class="panel-body">
+
+        <div class="totals-box">
+            <div class="totals-head">مجموع سرمایه نقدی به تفکیک ارز</div>
+            <table class="totals-table">
+                {% if totals %}
+                    {% for code, amount in totals.items() %}
+                    <tr>
+                        <td class="code">{{ code }}</td>
+                        <td class="amount {{ 'negative' if amount < 0 else 'positive' }}">
+                            {{ '{:,.2f}'.format(amount) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="2" class="empty-msg">هیچ موجودی ثبت‌شده‌ای یافت نشد</td></tr>
+                {% endif %}
+            </table>
+        </div>
+
+        <div class="section-title">جزئیات به تفکیک هر بانک / صندوق</div>
+
+        {% if per_bank %}
+        <table class="bank-table">
+            <thead>
+                <tr>
+                    <th>بانک / صندوق</th>
+                    <th>موجودی به تفکیک ارز</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in per_bank %}
+                <tr>
+                    <td class="name">
+                        <a href="{{ url_for('main.bank_account', bank_id=row.bank.id) }}">{{ row.bank.name }}</a>
+                        {% if not row.bank.is_active %}<span style="color:#c62828;">(غیرفعال)</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if row.balances %}
+                            {% for code, amount in row.balances.items() %}
+                                <span style="{{ 'color:#c62828;' if amount < 0 else '' }}">
+                                    {{ code }}: {{ '{:,.2f}'.format(amount) }}
+                                </span>{% if not loop.last %} &nbsp;|&nbsp; {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span style="color:#aaa;">بدون موجودی</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-msg">هیچ بانک/صندوقی ثبت نشده است</div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

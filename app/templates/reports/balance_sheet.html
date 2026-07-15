@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}ترازنامه مالی{% endblock %}
+{% block content %}
+<style>
+    .bs-wrap { background:#f4f6f5; padding:30px 15px; }
+    .bs-card { max-width:960px; margin:0 auto; background:#fff; border-radius:10px;
+               box-shadow:0 2px 10px rgba(0,0,0,0.06); padding:30px 30px 15px; }
+
+    .bs-top { display:flex; justify-content:flex-end; margin-bottom:10px; }
+    .bs-top a { color:#1565c0; text-decoration:none; font-size:13px; }
+    .bs-top a:hover { text-decoration:underline; }
+
+    .bs-header { text-align:center; margin-bottom:18px; }
+    .bs-header h1 { font-size:19px; color:#1b5e20; font-weight:bold; margin:0 0 6px; }
+    .bs-header .subtitle { font-size:13px; color:#888; margin:0; }
+    .bs-divider { width:70px; height:3px; background:#2e7d32; margin:14px auto 0; border-radius:2px; }
+
+    .bs-columns { display:flex; gap:26px; margin-top:26px; flex-wrap:wrap; }
+    .bs-col { flex:1; min-width:280px; border:1px solid #e6ecea; border-radius:8px; padding:18px 20px; }
+    .bs-col h2 { font-size:14px; color:#1b5e20; font-weight:bold; margin:0 0 14px; }
+
+    .bs-row { display:flex; justify-content:space-between; align-items:center;
+              padding:11px 0; border-bottom:1px solid #eef2f0; font-size:14px; }
+    .bs-row:last-child { border-bottom:none; }
+    .bs-row .label { color:#444; }
+    .bs-row .value { color:#1565c0; font-weight:600; direction:ltr; }
+    .bs-row .value.neg { color:#455a64; }
+
+    .bs-row.total { background:#eaf6ec; margin:6px -20px 0; padding:12px 20px; border-radius:4px;
+                    border-top:2px solid #2e7d32; border-bottom:none; }
+    .bs-row.total .label, .bs-row.total .value { font-weight:bold; color:#1b5e20; }
+
+    .bs-row.equity { background:#eaf6ec; margin:0 -20px; padding:12px 20px; border-radius:4px; }
+    .bs-row.equity .label, .bs-row.equity .value { font-weight:bold; color:#1b5e20; }
+
+    .bs-footer { display:flex; justify-content:space-between; font-size:12px; color:#999;
+                 border-top:1px solid #eee; margin-top:22px; padding-top:14px; }
+
+    @media (max-width:700px){ .bs-columns { flex-direction:column; } }
+</style>
+
+<div class="bs-wrap">
+    <div class="bs-card">
+        <div class="bs-top"><a href="{{ back_url }}">◀ بازگشت به گزارش‌ها</a></div>
+
+        <div class="bs-header">
+            <h1>{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</h1>
+            <p class="subtitle">ترازنامه مالی</p>
+            <div class="bs-divider"></div>
+        </div>
+
+        <div class="bs-columns">
+            <div class="bs-col">
+                <h2>دارایی‌ها</h2>
+
+                <div class="bs-row">
+                    <span class="label">پول نقد</span>
+                    <span class="value {{ 'neg' if data.cash < 0 else '' }}">
+                        $ {{ '{:,.2f}'.format(data.cash|abs) }}{{ '-' if data.cash < 0 else '' }}
+                    </span>
+                </div>
+
+                <div class="bs-row">
+                    <span class="label">حساب‌های قابل دریافت</span>
+                    <span class="value {{ 'neg' if data.receivable < 0 else '' }}">
+                        $ {{ '{:,.2f}'.format(data.receivable|abs) }}{{ '-' if data.receivable < 0 else '' }}
+                    </span>
+                </div>
+
+                <div class="bs-row">
+                    <span class="label">موجودی انبار</span>
+                    <span class="value {{ 'neg' if data.inventory < 0 else '' }}">
+                        $ {{ '{:,.2f}'.format(data.inventory|abs) }}{{ '-' if data.inventory < 0 else '' }}
+                    </span>
+                </div>
+
+                <div class="bs-row total">
+                    <span class="label">جمع دارایی‌های جاری</span>
+                    <span class="value">
+                        $ {{ '{:,.2f}'.format(data.total_current_assets|abs) }}{{ '-' if data.total_current_assets < 0 else '' }}
+                    </span>
+                </div>
+
+                <div class="bs-row">
+                    <span class="label">دارایی ثابت (خالص)</span>
+                    <span class="value">$ {{ '{:,.2f}'.format(data.fixed_assets) }}</span>
+                </div>
+            </div>
+
+            <div class="bs-col">
+                <h2>بدهی‌ها و سرمایه</h2>
+
+                <div class="bs-row">
+                    <span class="label">حساب‌های پرداختنی</span>
+                    <span class="value {{ 'neg' if data.payable < 0 else '' }}">
+                        $ {{ '{:,.2f}'.format(data.payable|abs) }}{{ '-' if data.payable < 0 else '' }}
+                    </span>
+                </div>
+
+                <div class="bs-row total">
+                    <span class="label">جمع بدهی‌ها</span>
+                    <span class="value">
+                        $ {{ '{:,.2f}'.format(data.total_liabilities|abs) }}{{ '-' if data.total_liabilities < 0 else '' }}
+                    </span>
+                </div>
+
+                <div class="bs-row equity">
+                    <span class="label">سرمایه خالص</span>
+                    <span class="value">
+                        $ {{ '{:,.2f}'.format(data.net_equity|abs) }}{{ '-' if data.net_equity < 0 else '' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bs-footer">
+            <span>واحد مالی</span>
+            <span>تاریخ گزارش: {{ '%04d-%02d-%02d'|format(today.year, today.month, today.day) }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}حساب جاری مشتری{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .amt-neg { color:#c62828; }
+    .amt-pos { color:#2e7d32; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+</style>
+
+<a href="{{ url_for('main.customer_account', customer_id=customer.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">حساب جاری — {{ customer.name }}</div>
+    <form method="get" style="padding:12px 16px; display:flex; gap:10px; align-items:center; justify-content:center;">
+        <label style="font-size:12px;">واحد پولی:</label>
+        <select name="currency" onchange="this.form.submit()" style="padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+            {% for c in available_currencies %}
+            <option value="{{ c }}" {% if currency_filter == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>تاریخ</th>
+                <th>واحد پولی</th>
+                <th>شرح</th>
+                <th>مبلغ</th>
+                <th>مانده</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ e.j_year }}-{{ '%02d'|format(e.j_month) }}-{{ '%02d'|format(e.j_day) }}</td>
+                <td>{{ e.currency }}</td>
+                <td>{{ e.desc }}</td>
+                <td class="{{ 'amt-neg' if e.amount < 0 else 'amt-pos' }}">{{ '{:,.0f}'.format(e.amount) }}</td>
+                <td style="font-weight:bold;">{{ '{:,.0f}'.format(e.balance) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">هیچ تراکنشی در این واحدپول ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

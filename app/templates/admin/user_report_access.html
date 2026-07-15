@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}تعریف دسترسیها{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .access-frame { max-width:680px; margin:0 auto; border:1px solid #cfd8dc; border-radius:4px; padding:30px 20px; }
+    .access-hint { text-align:center; color:#777; font-size:12px; margin-bottom:24px; }
+    .access-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:22px; margin-bottom:26px; }
+    .access-card { position:relative; width:150px; border:2px solid #ddd; border-radius:4px; cursor:pointer;
+                   background:#fff; overflow:hidden; transition:border-color .15s, box-shadow .15s; user-select:none; }
+    .access-card:hover { box-shadow:0 2px 10px rgba(0,0,0,0.12); }
+    .access-card.selected { border-color:#1e88e5; box-shadow:0 0 0 2px rgba(30,136,229,0.25); }
+    .access-card input { position:absolute; opacity:0; pointer-events:none; }
+    .access-card-check { position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%;
+                          background:#1e88e5; color:#fff; font-size:13px; line-height:20px; text-align:center;
+                          display:none; }
+    .access-card.selected .access-card-check { display:block; }
+    .access-card-icon { height:95px; display:flex; align-items:center; justify-content:center; background:#fff; }
+    .access-card-icon svg { width:60px; height:60px; }
+    .access-card-label { background:#fff9c4; color:#000; text-align:center; font-weight:bold; font-size:12px; padding:8px 6px; border-top:1px solid #eee; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:20px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>تعریف دسترسیها — {{ user.username }}</span></div>
+    <div class="panel-body">
+        <div class="access-frame">
+            <p class="access-hint">
+                روی هر کتگوری کلیک کنید تا انتخاب/لغو انتخاب شود. فقط راپورهایی که انتخاب شوند
+                برای این کاربر قابل مشاهده خواهند بود.
+            </p>
+            <form method="post" id="reportAccessForm">
+                <div class="access-grid">
+                    {% set icons = {
+                        'general':          '<circle cx="50" cy="26" r="8" fill="#1e88e5"/><rect x="26" y="40" width="48" height="42" rx="4" fill="#e3f2fd" stroke="#1e88e5" stroke-width="2"/><rect x="34" y="50" width="32" height="4" fill="#1e88e5"/><rect x="34" y="60" width="32" height="4" fill="#1e88e5"/><rect x="34" y="70" width="20" height="4" fill="#1e88e5"/>',
+                        'revenue_expense':  '<circle cx="50" cy="50" r="30" fill="#ffd54f" stroke="#f9a825" stroke-width="2"/><text x="50" y="59" font-size="26" text-anchor="middle" fill="#f57f17" font-weight="bold">$</text>',
+                        'exchange':         '<path d="M20 38h50l-12-12" fill="none" stroke="#43a047" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M80 62h-50l12 12" fill="none" stroke="#1e88e5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+                        'customers':        '<circle cx="42" cy="30" r="14" fill="#f2c48d"/><path d="M20 78c0-16 10-26 22-26s22 10 22 26" fill="#4caf50"/><rect x="55" y="55" width="26" height="16" rx="2" fill="#fff" stroke="#888" stroke-width="2"/><path d="M58 63h20" stroke="#4caf50" stroke-width="2"/>',
+                        'vendors':          '<circle cx="38" cy="28" r="13" fill="#f2c48d"/><path d="M18 76c0-15 9-24 20-24s20 9 20 24" fill="#78909c"/><rect x="58" y="52" width="26" height="22" rx="2" fill="#c88a4a"/><rect x="63" y="46" width="16" height="10" rx="2" fill="#c88a4a"/>',
+                        'warehouse':        '<rect x="20" y="46" width="26" height="26" fill="#c88a4a" stroke="#8d5a26" stroke-width="1.5"/><rect x="50" y="38" width="26" height="34" fill="#d9a066" stroke="#8d5a26" stroke-width="1.5"/><rect x="30" y="54" width="6" height="6" fill="#8d5a26"/><rect x="58" y="48" width="8" height="8" fill="#8d5a26"/>',
+                        'employees':        '<circle cx="50" cy="28" r="14" fill="#f2c48d"/><path d="M24 82c0-18 12-30 26-30s26 12 26 30" fill="#37474f"/><path d="M40 55l10 8 10-8" fill="none" stroke="#fff" stroke-width="3"/>',
+                    } %}
+                    {% for slug, title in report_pages.items() %}
+                    <label class="access-card {% if slug in allowed %}selected{% endif %}" for="cat_{{ slug }}">
+                        <input type="checkbox" name="categories" value="{{ slug }}" id="cat_{{ slug }}"
+                               {% if slug in allowed %}checked{% endif %}
+                               onchange="this.closest('.access-card').classList.toggle('selected', this.checked)">
+                        <span class="access-card-check">✓</span>
+                        <div class="access-card-icon">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                {{ icons.get(slug, '')|safe }}
+                            </svg>
+                        </div>
+                        <div class="access-card-label">{{ title }}</div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">ذخیره</button>
+                    <a href="{{ url_for('main.user_edit_hub', id=user.id) }}" class="btn-cancel">انصراف</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

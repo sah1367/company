@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}تعریف قروض{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:13px; font-weight:bold;
+        padding:9px 14px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:160px; }
+    .field-row input, .field-row textarea { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; font-family:Tahoma; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 12px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 12px; font-size:12px; border-bottom:1px solid #eee; }
+    .act-link { color:#555; text-decoration:none; margin-left:10px; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">تعریف قروض</div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_b %}
+            <input type="hidden" name="b_id" value="{{ edit_b.id }}">
+            {% endif %}
+            <div class="field-row">
+                <input type="text" name="name" required value="{{ edit_b.name if edit_b else '' }}">
+                <label>قرض (گیرنده/دهنده)</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="address" value="{{ edit_b.address if edit_b else '' }}">
+                <label>آدرس</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="book_no" value="{{ edit_b.book_no if edit_b else '' }}">
+                <label>شماره کتاب</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="phone" value="{{ edit_b.phone if edit_b else '' }}">
+                <label>شماره تماس</label>
+            </div>
+            <div class="field-row">
+                <textarea name="notes" rows="4">{{ edit_b.notes if edit_b else '' }}</textarea>
+                <label>توضیحات</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.borrowers') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="جستجو قرض دهنده"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th style="width:60px">شماره</th>
+                <th>قرض دهنده</th>
+                <th>شماره تماس</th>
+                <th>آدرس</th>
+                <th>توضیحات</th>
+                <th style="width:140px">ویرایش</th>
+            </tr>
+        </thead>
+        <tbody id="borrowerTableBody">
+            {% for b in borrowers %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="borrower-name">{{ b.name }}</td>
+                <td>{{ b.phone or '0' }}</td>
+                <td>{{ b.address or '-' }}</td>
+                <td>{{ b.notes or '-' }}</td>
+                <td>
+                    <a href="{{ url_for('main.borrowers', edit=b.id) }}" class="act-link">✏ ویرایش</a>
+                    <a href="{{ url_for('main.borrower_delete', id=b.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑 پاک کردن</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">هیچ رکوردی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#borrowerTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.borrower-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}حسابات بانک{% endblock %}
+
+{% block content %}
+<style>
+
+.bank-container{
+    max-width:900px;
+    margin:30px auto;
+    background:#fff;
+    border:1px solid #dcdcdc;
+    border-radius:8px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    overflow:hidden;
+}
+
+.panel-head{
+    background:#1976d2;
+    color:#fff;
+    text-align:center;
+    padding:15px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.summary-table{
+    width:90%;
+    margin:25px auto;
+    border-collapse:collapse;
+}
+
+.summary-table td{
+    border:1px solid #ddd;
+    padding:12px;
+    font-size:14px;
+}
+
+.summary-label{
+    background:#f5f5f5;
+    font-weight:bold;
+    text-align:center;
+    width:220px;
+}
+
+.balance-row td{
+    background:#fff8e1;
+    font-weight:bold;
+    color:#0d47a1;
+}
+
+.actions-panel{
+    width:90%;
+    margin:25px auto;
+    border:1px solid #ddd;
+    border-radius:6px;
+    overflow:hidden;
+}
+
+.actions-head{
+    background:#424242;
+    color:#fff;
+    text-align:center;
+    padding:12px;
+    font-size:16px;
+    font-weight:bold;
+}
+
+.actions-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+    padding:20px;
+    background:#fafafa;
+}
+
+.actions-grid a{
+    display:block;
+    text-align:center;
+    text-decoration:none;
+    padding:18px;
+    border-radius:6px;
+    border:1px solid #1976d2;
+    background:#fff;
+    color:#1976d2;
+    font-size:15px;
+    font-weight:bold;
+    transition:.25s;
+}
+
+.actions-grid a:hover{
+    background:#1976d2;
+    color:#fff;
+    transform:translateY(-2px);
+}
+
+@media(max-width:700px){
+
+.actions-grid{
+    grid-template-columns:1fr;
+}
+
+.summary-table{
+    width:95%;
+}
+
+.actions-panel{
+    width:95%;
+}
+
+}
+
+</style>
+
+<div class="bank-container">
+
+    <div class="panel-head">
+        حسابات : {{ bank.name }}
+    </div>
+
+    <table class="summary-table">
+
+        <tr>
+            <td>1</td>
+            <td class="summary-label">نمبر شناسائی</td>
+        </tr>
+
+        <tr>
+            <td>{{ bank.name }}</td>
+            <td class="summary-label">بانک</td>
+        </tr>
+
+        {% for code, amount in balances.items() %}
+        <tr class="balance-row">
+            <td>{{ '{:,.2f}'.format(amount) }}</td>
+            <td class="summary-label">{{ code }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+    <div class="actions-panel">
+
+        <div class="actions-head">
+            جزئیات بانک
+        </div>
+
+        <div class="actions-grid">
+
+            <a href="{{ url_for('main.bank_current_account', bank_id=bank.id) }}">
+                حساب جاری
+            </a>
+
+            <a href="{{ url_for('main.bank_operations', bank_id=bank.id) }}">
+                جزئیات عملیاتی بانک
+            </a>
+
+            <a href="{{ url_for('main.bank_statement', bank_id=bank.id) }}">
+                استتمنت بانکی
+            </a>
+
+            <a href="{{ url_for('main.bank_date_range', bank_id=bank.id) }}">
+                استتمنت تاریخ‌وار
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

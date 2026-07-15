@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}موجودی بر اساس هر گدام{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:16px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:110px; text-align:right; }
+    .field-row select.single { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+
+    .btn-row { display:flex; justify-content:center; gap:10px; margin-top:8px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .btn-clear { background:#90a4ae; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; text-decoration:none; display:inline-block; }
+    .btn-print { background:#2e7d32; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+
+    /* ===== سند راپور قابل چاپ ===== */
+    .report-doc { max-width:1000px; margin:0 auto 22px; border:1px solid #d8c98a; background:#fff; }
+
+    .report-header { display:flex; align-items:center; border-bottom:2px solid #f4c430; padding:14px 16px; }
+    .report-header .logo-badge {
+        width:60px; height:60px; border-radius:6px; background:#78909c; color:#fff;
+        display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; flex-shrink:0; overflow:hidden;
+    }
+    .report-header .titles { flex:1; text-align:center; }
+    .report-header .titles .main { font-size:15px; font-weight:bold; color:#1b1b1b; margin-bottom:6px; }
+
+    .warehouse-title {
+        background:#e3f2fd; color:#0d47a1; font-size:13px; font-weight:bold;
+        padding:10px 16px; border-bottom:1px solid #d8c98a;
+    }
+
+    table.report-table { width:100%; border-collapse:collapse; }
+    table.report-table th {
+        background:#f4c430; color:#1b1b1b; font-size:11px; font-weight:bold; padding:8px 6px;
+        text-align:center; border:1px solid #ddb92e;
+    }
+    table.report-table td {
+        font-size:11px; padding:6px 6px; text-align:center; border-bottom:1px solid #eef2f5; border-left:1px solid #f2f6fa;
+    }
+    table.report-table td.desc { text-align:right; }
+    table.report-table tbody tr:nth-child(even) { background:#fafcfe; }
+
+    .report-footer { display:flex; border-top:2px solid #f4c430; }
+    .report-footer .cell { flex:1; padding:12px 14px; font-size:13px; font-weight:bold; text-align:center; }
+    .report-footer .cell.label { color:#333; }
+    .report-footer .cell.qty { color:#1565c0; }
+
+    .grand-total-doc { max-width:1000px; margin:0 auto; border:1px solid #d8c98a; background:#fff; }
+
+    @media print {
+        #top, #navigation, .no-print { display:none !important; }
+        .panel { display:none !important; }
+        body { background:#fff; }
+    }
+</style>
+
+<div class="panel no-print">
+    <div class="panel-head">
+        <span>موجودی بر اساس هر گدام</span>
+        <a href="{{ back_url }}">◀ بازگشت به گزارش‌های گدام</a>
+    </div>
+    <div class="panel-body">
+        <form method="get">
+            <div class="field-row">
+                <select name="stock_id" class="single">
+                    <option value="">همه گدامها</option>
+                    {% for s in stock_list %}
+                    <option value="{{ s.id }}" {% if selected_stock_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>گدام</label>
+            </div>
+
+            <div class="field-row">
+                <select name="category_id" class="single">
+                    <option value="">همه کتگوری‌ها</option>
+                    {% for c in category_list %}
+                    <option value="{{ c.id }}" {% if selected_category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>کتگوری گدام</label>
+            </div>
+
+            <div class="field-row">
+                <select name="item_id" class="single">
+                    <option value="">همه اجناس</option>
+                    {% for it in item_list %}
+                    <option value="{{ it.id }}" {% if selected_item_id == it.id %}selected{% endif %}>{{ it.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>نام کالا</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.stock_by_warehouse_report') }}" class="btn-clear">پاک کردن</a>
+                <button type="submit" name="searched" value="1" class="btn-blue">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+    {% if groups %}
+    <div class="no-print" style="text-align:center; margin-bottom:14px;">
+        <button onclick="window.print()" class="btn-print">چاپ راپور</button>
+    </div>
+
+    {% for g in groups %}
+    <div class="report-doc">
+        <div class="report-header">
+            <div class="logo-badge">{% if company and company.logo_filename %}<img src="{{ url_for('static', filename=company.logo_filename) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}TH{% endif %}</div>
+            <div class="titles">
+                <div class="main">موجودی گدام: {{ g.stock_name }}</div>
+            </div>
+        </div>
+        <div class="warehouse-title">جنس‌های موجود در گدام «{{ g.stock_name }}»</div>
+
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width:40px;">شماره</th>
+                    <th>کتگوری</th>
+                    <th>نام جنس</th>
+                    <th style="width:60px;">واحد</th>
+                    <th style="width:90px;">مقدار موجود</th>
+                    <th style="width:90px;">آخرین قیمت (USD)</th>
+                    <th style="width:100px;">ارزش کل (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in g.rows %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ r.category_name }}</td>
+                    <td>{{ r.item_name }}</td>
+                    <td>{{ r.unit_name }}</td>
+                    <td>{{ '{:,.2f}'.format(r.qty) }}</td>
+                    <td>{{ '{:,.2f}'.format(r.price) }}</td>
+                    <td>{{ '{:,.2f}'.format(r.value) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="report-footer">
+            <div class="cell qty">{{ '{:,.2f}'.format(g.group_qty) }}</div>
+            <div class="cell label">مجموع موجودی این گدام</div>
+            <div class="cell qty">{{ '{:,.2f}'.format(g.group_value) }}</div>
+            <div class="cell label">مجموع ارزش این گدام (USD)</div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="grand-total-doc">
+        <div class="report-footer" style="border-top:2px solid #1e88e5;">
+            <div class="cell qty">{{ '{:,.2f}'.format(total_qty) }}</div>
+            <div class="cell label">مجموع کلی موجودی (همه گدامها)</div>
+            <div class="cell qty">{{ '{:,.2f}'.format(total_value) }}</div>
+            <div class="cell label">مجموع ارزش کلی (USD)</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="panel">
+        <div class="panel-body" style="text-align:center; color:#999;">هیچ موجودی‌ای مطابق این فیلتر یافت نشد</div>
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

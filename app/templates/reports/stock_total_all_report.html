@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}موجودی کلی گدامها{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:16px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:110px; text-align:right; }
+    .field-row select.single { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+
+    .btn-row { display:flex; justify-content:center; gap:10px; margin-top:8px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .btn-clear { background:#90a4ae; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; text-decoration:none; display:inline-block; }
+    .btn-print { background:#2e7d32; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+
+    .report-doc { max-width:100%; margin:0 auto; border:1px solid #d8c98a; background:#fff; overflow-x:auto; }
+
+    .report-header { display:flex; align-items:center; border-bottom:2px solid #66bb6a; padding:14px 16px; }
+    .report-header .logo-badge {
+        width:60px; height:60px; border-radius:6px; background:#78909c; color:#fff;
+        display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; flex-shrink:0; overflow:hidden;
+    }
+    .report-header .titles { flex:1; text-align:center; }
+    .report-header .titles .main { font-size:15px; font-weight:bold; color:#1b1b1b; }
+
+    table.pivot-table { width:100%; border-collapse:collapse; min-width:600px; }
+    table.pivot-table th {
+        background:#66bb6a; color:#fff; font-size:12px; font-weight:bold; padding:8px 6px;
+        text-align:center; border:1px solid #4caf50;
+    }
+    table.pivot-table th.item-name-col { background:#66bb6a; min-width:170px; }
+    table.pivot-table th.num-col { background:#66bb6a; width:50px; }
+    table.pivot-table th.total-col { background:#43a047; min-width:90px; }
+
+    table.pivot-table td {
+        font-size:12px; padding:7px 6px; text-align:center; border:1px solid #eef2f5; white-space:nowrap;
+    }
+    table.pivot-table td.item-name { text-align:right; background:#fff; font-weight:500; }
+    table.pivot-table td.num { background:#fff; color:#666; }
+    table.pivot-table td.cell-current { background:#c8e6c9; color:#1b5e20; font-weight:bold; }
+    table.pivot-table td.cell-reserved { background:#ffccbc; color:#bf360c; font-weight:bold; }
+    table.pivot-table td.cell-available { background:#fff9c4; color:#7a6300; font-weight:bold; }
+    table.pivot-table td.cell-total { background:#e8f5e9; color:#1b5e20; font-weight:bold; }
+    table.pivot-table tbody tr:nth-child(even) td.item-name,
+    table.pivot-table tbody tr:nth-child(even) td.num { background:#fafcfe; }
+
+    tfoot td { font-weight:bold; }
+
+    .legend { display:flex; justify-content:center; gap:18px; margin:14px 0; font-size:12px; }
+    .legend span { display:inline-flex; align-items:center; gap:6px; }
+    .legend .swatch { width:14px; height:14px; border-radius:3px; display:inline-block; }
+
+    @media print {
+        #top, #navigation, .no-print { display:none !important; }
+        .panel { display:none !important; }
+        body { background:#fff; }
+    }
+</style>
+
+<div class="panel no-print">
+    <div class="panel-head">
+        <span>موجودی کلی گدامها</span>
+        <a href="{{ back_url }}">◀ بازگشت به گزارش‌های گدام</a>
+    </div>
+    <div class="panel-body">
+        <form method="get">
+            <div class="field-row">
+                <select name="category_id" class="single">
+                    <option value="">همه کتگوری‌ها</option>
+                    {% for c in category_list %}
+                    <option value="{{ c.id }}" {% if selected_category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>کتگوری گدام</label>
+            </div>
+
+            <div class="field-row">
+                <select name="item_id" class="single">
+                    <option value="">همه اجناس</option>
+                    {% for it in item_list %}
+                    <option value="{{ it.id }}" {% if selected_item_id == it.id %}selected{% endif %}>{{ it.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>نام کالا</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.stock_total_all_report') }}" class="btn-clear">پاک کردن</a>
+                <button type="submit" name="searched" value="1" class="btn-blue">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+    {% if rows %}
+    <div class="no-print" style="text-align:center; margin-bottom:14px;">
+        <button onclick="window.print()" class="btn-print">چاپ راپور</button>
+    </div>
+
+    <div class="legend no-print">
+        <span><span class="swatch" style="background:#c8e6c9;"></span> موجود</span>
+        <span><span class="swatch" style="background:#ffccbc;"></span> رزرو</span>
+        <span><span class="swatch" style="background:#fff9c4;"></span> قابل موجود</span>
+    </div>
+
+    <div class="report-doc">
+        <div class="report-header">
+            <div class="logo-badge">{% if company and company.logo_filename %}<img src="{{ url_for('static', filename=company.logo_filename) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}TH{% endif %}</div>
+            <div class="titles">
+                <div class="main">موجودی کلی گدامها (به تفکیک هر گدام)</div>
+            </div>
+        </div>
+
+        <table class="pivot-table">
+            <thead>
+                <tr>
+                    <th class="total-col">مجموع</th>
+                    {% for st in stock_list %}
+                    <th colspan="3">{{ st.name }}</th>
+                    {% endfor %}
+                    <th class="item-name-col">نام کالا</th>
+                    <th class="num-col">شماره</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td class="cell-total">{{ '{:,.2f}'.format(r.row_total) }}</td>
+                    {% for c in r.cells %}
+                    <td class="cell-current">{{ '{:,.2f}'.format(c.current) }}</td>
+                    <td class="cell-reserved">{{ '{:,.2f}'.format(c.reserved) }}</td>
+                    <td class="cell-available">{{ '{:,.2f}'.format(c.available) }}</td>
+                    {% endfor %}
+                    <td class="item-name">{{ r.item_name }}</td>
+                    <td class="num">{{ loop.index }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td class="cell-total">{{ '{:,.2f}'.format(grand_total) }}</td>
+                    {% for gt in grand_totals %}
+                    <td class="cell-current">{{ '{:,.2f}'.format(gt.current) }}</td>
+                    <td class="cell-reserved">{{ '{:,.2f}'.format(gt.reserved) }}</td>
+                    <td class="cell-available">{{ '{:,.2f}'.format(gt.available) }}</td>
+                    {% endfor %}
+                    <td class="item-name">جمع کلی</td>
+                    <td class="num">-</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <div class="panel">
+        <div class="panel-body" style="text-align:center; color:#999;">هیچ موجودی‌ای مطابق این فیلتر یافت نشد</div>
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

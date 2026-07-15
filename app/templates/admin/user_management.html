@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}تعریف کاربری{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; display:flex; justify-content:space-between; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .form-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:18px; }
+    .form-row label { font-size:13px; color:#333; white-space:nowrap; width:110px; text-align:left; }
+    .form-row input, .form-row select { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 12px; text-align:right; }
+    table.cat-table td { padding:8px 12px; font-size:12px; border-bottom:1px solid #eee; }
+    .act-link { color:#555; text-decoration:none; margin-left:10px; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .badge { padding:2px 8px; border-radius:10px; font-size:11px; }
+    .badge-active { background:#e3f6e6; color:#1e8e3e; }
+    .badge-inactive { background:#fdecea; color:#c62828; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>تعریف کاربری</span></div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_user %}<input type="hidden" name="user_id" value="{{ edit_user.id }}">{% endif %}
+            <div class="form-row">
+                <input type="text" name="username" required value="{{ edit_user.username if edit_user else '' }}">
+                <label>نام کاربری</label>
+            </div>
+            <div class="form-row">
+                <input type="text" name="full_name" value="{{ edit_user.full_name if edit_user else '' }}">
+                <label>نام کامل</label>
+            </div>
+            <div class="form-row">
+                <input type="password" name="password" autocomplete="new-password"
+                       placeholder="{{ 'برای عدم تغییر خالی بگذارید' if edit_user else '' }}"
+                       {{ '' if edit_user else 'required' }}>
+                <label>رمز عبور</label>
+            </div>
+            <div class="form-row">
+                <select name="role">
+                    <option value="admin" {% if edit_user and edit_user.role == 'admin' %}selected{% endif %}>مدیر کل</option>
+                    <option value="user" {% if not edit_user or edit_user.role != 'admin' %}selected{% endif %}>کاربر</option>
+                </select>
+                <label>نوعیت کاربری</label>
+            </div>
+            <div class="form-row">
+                <select name="is_active">
+                    <option value="1" {% if not edit_user or edit_user.is_active %}selected{% endif %}>فعال</option>
+                    <option value="0" {% if edit_user and not edit_user.is_active %}selected{% endif %}>غیرفعال</option>
+                </select>
+                <label>حالت اجرا</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.user_management') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>کاربران ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="جستجو" style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th style="width:50px">شماره</th>
+                <th>نام کاربری</th>
+                <th>نام کامل</th>
+                <th>نوعیت کاربری</th>
+                <th>حالت اجرا</th>
+                <th style="width:80px">ویرایش</th>
+                <th style="width:80px">حذف</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            {% for u in users %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="u-name">{{ u.username }}</td>
+                <td>{{ u.full_name or '-' }}</td>
+                <td>{{ 'مدیر کل' if u.role == 'admin' else 'کاربر' }}</td>
+                <td>
+                    {% if u.is_active %}
+                        <span class="badge badge-active">فعال</span>
+                    {% else %}
+                        <span class="badge badge-inactive">غیرفعال</span>
+                    {% endif %}
+                </td>
+                <td><a href="{{ url_for('main.user_edit_hub', id=u.id) }}" class="act-link">✏ ویرایش</a></td>
+                <td><a href="{{ url_for('main.user_management_delete', id=u.id) }}" class="act-link" onclick="return confirm('این کاربر حذف شود؟')">🗑 حذف</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#999;">هیچ کاربری ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    document.querySelectorAll('#userTableBody tr').forEach(function(row) {
+        var cell = row.querySelector('.u-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

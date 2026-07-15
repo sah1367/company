@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}دسترسیهای منو{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .hub-frame { max-width:700px; margin:0 auto; border:1px solid #cfd8dc; border-radius:4px; padding:30px 20px; }
+    .hub-hint { text-align:center; color:#777; font-size:12px; margin-bottom:24px; }
+    .hub-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:18px; margin-bottom:26px; }
+    .hub-card { width:140px; border:1px solid #ddd; border-radius:4px; text-decoration:none; color:inherit;
+                overflow:hidden; transition:box-shadow .15s; }
+    .hub-card:hover { box-shadow:0 2px 10px rgba(0,0,0,0.12); }
+    .hub-card-icon { height:80px; display:flex; align-items:center; justify-content:center; background:#fff; }
+    .hub-card-icon svg { width:50px; height:50px; }
+    .hub-card-label { background:#fff9c4; color:#000; text-align:center; font-weight:bold; font-size:12px; padding:8px 6px; border-top:1px solid #eee; }
+    .btn-row { display:flex; justify-content:center; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:20px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>دسترسیهای منو — {{ user.username }}</span></div>
+    <div class="panel-body">
+        <div class="hub-frame">
+            <p class="hub-hint">یکی از منوها را انتخاب کنید تا جزئیات قابل نمایش/مخفی آن را تعریف کنید.</p>
+            <div class="hub-grid">
+                {% set menu_icons = {
+                    'warehouse':  '<rect x="20" y="46" width="26" height="26" fill="#c88a4a"/><rect x="50" y="38" width="26" height="34" fill="#d9a066"/>',
+                    'purchase':   '<circle cx="38" cy="28" r="13" fill="#f2c48d"/><path d="M18 76c0-15 9-24 20-24s20 9 20 24" fill="#78909c"/><rect x="58" y="52" width="26" height="22" rx="2" fill="#c88a4a"/>',
+                    'sale':       '<circle cx="42" cy="30" r="14" fill="#f2c48d"/><path d="M20 78c0-16 10-26 22-26s22 10 22 26" fill="#4caf50"/>',
+                    'treasury':   '<rect x="20" y="35" width="60" height="45" fill="#90caf9" stroke="#1e88e5" stroke-width="2"/><polygon points="50,15 85,35 15,35" fill="#1e88e5"/>',
+                    'expenses':   '<circle cx="50" cy="50" r="30" fill="#ffd54f" stroke="#f9a825" stroke-width="2"/><text x="50" y="59" font-size="26" text-anchor="middle" fill="#f57f17" font-weight="bold">$</text>',
+                    'receipt':    '<path d="M20 55h30l-8-8" fill="none" stroke="#43a047" stroke-width="5"/><path d="M80 45h-30l8 8" fill="none" stroke="#1e88e5" stroke-width="5"/>',
+                    'personal':   '<circle cx="50" cy="28" r="14" fill="#f2c48d"/><path d="M24 82c0-18 12-30 26-30s26 12 26 30" fill="#37474f"/>',
+                    'employees':  '<circle cx="50" cy="28" r="14" fill="#f2c48d"/><path d="M24 82c0-18 12-30 26-30s26 12 26 30" fill="#546e7a"/><path d="M40 55l10 8 10-8" fill="none" stroke="#fff" stroke-width="3"/>',
+                    'admin':      '<circle cx="50" cy="50" r="12" fill="#90a4ae"/><path d="M50 20v10M50 70v10M20 50h10M70 50h10M29 29l7 7M64 64l7 7M71 29l-7 7M36 64l-7 7" stroke="#546e7a" stroke-width="5" stroke-linecap="round"/>',
+                } %}
+                {% for menu_key, menu in menus.items() %}
+                <a class="hub-card" href="{{ url_for('main.user_menu_access', id=user.id, menu_key=menu_key) }}">
+                    <div class="hub-card-icon">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">{{ menu_icons.get(menu_key, '')|safe }}</svg>
+                    </div>
+                    <div class="hub-card-label">{{ menu.title }}</div>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.user_edit_hub', id=user.id) }}" class="btn-cancel">انصراف</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

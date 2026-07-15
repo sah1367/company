@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}صورت حساب جزوار مشتری{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+    .total-row td { background:#f0f0f0; font-weight:bold; }
+</style>
+
+<a href="{{ url_for('main.customer_account', customer_id=customer.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">صورت حساب جزوار — {{ customer.name }}</div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>شماره فاکتور</th>
+                <th>تاریخ</th>
+                <th>نام جنس</th>
+                <th>واحداندازه‌گیری</th>
+                <th>مقدار وزن</th>
+                <th>تعداد</th>
+                <th>فی</th>
+                <th>مجموع</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.invoice_no }}</td>
+                <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td>{{ r.item_name }}</td>
+                <td>{{ r.quantity_id or '-' }}</td>
+                <td>{{ r.amount }}</td>
+                <td>{{ r.count_desc or '-' }}</td>
+                <td>{{ '{:,.0f}'.format(r.price) }}</td>
+                <td>{{ '{:,.0f}'.format(r.total) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:20px; color:#999;">هیچ ردیفی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+        {% if rows %}
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="8">جمع کل</td>
+                <td>{{ '{:,.0f}'.format(grand_total) }}</td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+{% endblock %}

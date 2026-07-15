@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}پشتیبان گیری{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:26px 20px; background:#fff; }
+    .bk-frame { max-width:640px; margin:0 auto; }
+    .bk-box { border:1px solid #cfd8dc; border-radius:4px; padding:20px; margin-bottom:20px; }
+    .bk-box h3 { font-size:14px; margin-bottom:10px; color:#1e88e5; }
+    .bk-box p { font-size:12px; color:#666; margin-bottom:14px; line-height:1.8; }
+    .bk-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    .btn-green { background:#43a047; color:#fff; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-size:13px; }
+    .btn-red { background:#e53935; color:#fff; border:none; padding:6px 14px; border-radius:16px; cursor:pointer; font-size:11px; }
+    .bk-file-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .bk-file-row input[type=file] { font-size:12px; }
+    .bk-warn { background:#fff3e0; border:1px solid #ffb74d; color:#e65100; font-size:11.5px; padding:8px 10px; border-radius:4px; margin-top:10px; }
+    table.bk-table { width:100%; border-collapse:collapse; font-size:12px; }
+    table.bk-table th, table.bk-table td { border:1px solid #eee; padding:7px 8px; text-align:center; }
+    table.bk-table th { background:#f5f7fa; }
+    .bk-empty { text-align:center; color:#999; font-size:12px; padding:16px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>پشتیبان گیری از دیتابیس</span></div>
+    <div class="panel-body">
+        <div class="bk-frame">
+
+            <div class="bk-box">
+                <h3>دانلود نسخه پشتیبان</h3>
+                <p>حجم فعلی دیتابیس: {{ db_size_kb }} کیلوبایت. با کلیک روی هرکدام از دکمه‌های زیر، یک کپی از تمام اطلاعات فعلی سیستم (کاربران، فاکتورها، حسابات و...) گرفته می‌شود.</p>
+                <div class="bk-actions">
+                    <a class="btn-blue" href="{{ url_for('main.backup_download') }}">دانلود مستقیم نسخه پشتیبان</a>
+                    <form method="post" action="{{ url_for('main.backup_create') }}">
+                        <button type="submit" class="btn-green">ذخیره نسخه پشتیبان در سرور</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bk-box">
+                <h3>بازیابی از فایل پشتیبان</h3>
+                <p>یک فایل با پسوند db. که قبلاً از همین سیستم گرفته‌اید را انتخاب کنید. اطلاعات فعلی با اطلاعات داخل فایل جایگزین می‌شود.</p>
+                <form method="post" action="{{ url_for('main.backup_restore') }}" enctype="multipart/form-data">
+                    <div class="bk-file-row">
+                        <input type="file" name="backup_file" accept=".db" required>
+                        <button type="submit" class="btn-red" onclick="return confirm('اطلاعات فعلی با فایل انتخاب‌شده جایگزین می‌شود. قبل از جایگزینی یک نسخه پشتیبان خودکار گرفته می‌شود. ادامه می‌دهید؟');">بازیابی و جایگزینی</button>
+                    </div>
+                </form>
+                <div class="bk-warn">⚠ قبل از بازیابی، از وضعیت فعلی به‌طور خودکار یک نسخه پشتیبان اضطراری گرفته می‌شود؛ اما بهتر است قبلاً هم خودتان یک نسخه دانلود کرده باشید.</div>
+            </div>
+
+            <div class="bk-box">
+                <h3>نسخه‌های پشتیبان ذخیره‌شده در سرور</h3>
+                {% if backups %}
+                <table class="bk-table">
+                    <tr><th>نام فایل</th><th>تاریخ ساخت</th><th>حجم (KB)</th><th>عملیات</th></tr>
+                    {% for b in backups %}
+                    <tr>
+                        <td>{{ b.name }}</td>
+                        <td>{{ b.created }}</td>
+                        <td>{{ b.size_kb }}</td>
+                        <td>
+                            <a class="btn-blue" style="padding:4px 10px;font-size:11px;" href="{{ url_for('main.backup_download_file', fname=b.name) }}">دانلود</a>
+                            <form method="post" action="{{ url_for('main.backup_delete_file', fname=b.name) }}" style="display:inline;" onclick="return confirm('این نسخه پشتیبان حذف شود؟');">
+                                <button type="submit" class="btn-red">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="bk-empty">هنوز هیچ نسخه پشتیبانی روی سرور ذخیره نشده است.</div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

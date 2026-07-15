@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}ویرایش مشخصات کاربری{% endblock %}
+{% block content %}
+<style>
+    .hub-panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; margin-bottom:18px; }
+    .hub-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .hub-body { padding:40px 30px; background:#fff; }
+    .hub-frame { border:1px solid #ccc; border-radius:4px; padding:30px; max-width:740px; margin:0 auto; }
+    .hub-cards { display:flex; flex-wrap:wrap; justify-content:center; gap:24px; margin-bottom:26px; }
+    .hub-card { border:1px solid #ddd; border-radius:4px; width:220px; text-decoration:none; color:inherit; display:block; overflow:hidden; transition:box-shadow .15s; }
+    .hub-card:hover { box-shadow:0 2px 10px rgba(0,0,0,0.12); }
+    .hub-card-icon { height:150px; display:flex; align-items:center; justify-content:center; background:#fff; }
+    .hub-card-icon svg { width:90px; height:90px; }
+    .hub-card-label { background:#fff9c4; color:#000; text-align:center; font-weight:bold; font-size:13px; padding:9px 6px; border-top:1px solid #eee; }
+    .hub-btn-row { display:flex; justify-content:center; }
+    .hub-back { background:#e53935; color:#fff; border:none; padding:8px 34px; border-radius:20px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    .hub-username { text-align:center; color:#666; font-size:12px; margin-bottom:18px; }
+</style>
+
+<div class="hub-panel">
+    <div class="hub-head"><span>ویرایش مشخصات کاربری</span></div>
+    <div class="hub-body">
+        <div class="hub-frame">
+            <div class="hub-username">کاربر: <strong>{{ user.username }}</strong>{% if user.full_name %} ({{ user.full_name }}){% endif %}</div>
+            <div class="hub-cards">
+                <a class="hub-card" href="{{ url_for('main.user_management', edit=user.id) }}">
+                    <div class="hub-card-icon">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="30" r="16" fill="#f2c48d"/>
+                            <path d="M20 82c0-18 13-30 30-30s30 12 30 30" fill="#ffffff" stroke="#cfd8dc" stroke-width="2"/>
+                            <rect x="55" y="52" width="30" height="24" rx="4" fill="#c9a24b"/>
+                            <path d="M60 52v-8a10 10 0 0 1 20 0v8" fill="none" stroke="#c9a24b" stroke-width="5"/>
+                            <circle cx="70" cy="63" r="4" fill="#7a5c1e"/>
+                        </svg>
+                    </div>
+                    <div class="hub-card-label">تغییر نام کاربری/نوع فعالیت</div>
+                </a>
+                <a class="hub-card" href="{{ url_for('main.user_report_access', id=user.id) }}">
+                    <div class="hub-card-icon">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="62" cy="30" rx="18" ry="7" fill="#4fc3f7"/>
+                            <rect x="44" y="30" width="36" height="40" fill="#29b6f6"/>
+                            <ellipse cx="62" cy="70" rx="18" ry="7" fill="#0288d1"/>
+                            <ellipse cx="62" cy="50" rx="18" ry="7" fill="#81d4fa"/>
+                            <circle cx="28" cy="55" r="14" fill="#90a4ae"/>
+                            <circle cx="28" cy="55" r="5" fill="#546e7a"/>
+                            <rect x="24" y="41" width="8" height="6" fill="#90a4ae"/>
+                            <rect x="24" y="63" width="8" height="6" fill="#90a4ae"/>
+                            <rect x="12" y="51" width="8" height="6" fill="#90a4ae"/>
+                            <rect x="36" y="51" width="8" height="6" fill="#90a4ae"/>
+                        </svg>
+                    </div>
+                    <div class="hub-card-label">تعریف دسترسی راپورها</div>
+                </a>
+                <a class="hub-card" href="{{ url_for('main.user_menu_access_hub', id=user.id) }}">
+                    <div class="hub-card-icon">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="12" fill="#90a4ae"/>
+                            <path d="M50 20v10M50 70v10M20 50h10M70 50h10M29 29l7 7M64 64l7 7M71 29l-7 7M36 64l-7 7" stroke="#546e7a" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="hub-card-label">دسترسیهای منو</div>
+                </a>
+            </div>
+            <div class="hub-btn-row">
+                <a href="{{ url_for('main.user_management') }}" class="hub-back">برگشت</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

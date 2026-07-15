@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}عیب‌یابی ارزها{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; margin-bottom:16px; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 16px; }
+    .info-box { padding:14px 16px; font-size:13px; background:#fff8e1; border-bottom:1px solid #eee; word-break:break-all; }
+    table.dbg-table { width:100%; border-collapse:collapse; font-size:12px; }
+    table.dbg-table th { background:#1e88e5; color:#fff; padding:7px 10px; }
+    table.dbg-table td { padding:6px 10px; border-bottom:1px solid #eee; text-align:center; }
+    .yes { color:#2e7d32; font-weight:bold; }
+    .no { color:#c62828; font-weight:bold; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">مسیر واقعی دیتابیسی که سرور از آن می‌خواند</div>
+    <div class="info-box">{{ db_path }}</div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">لیست ارزها در دیتابیس ({{ all_currencies|length }} مورد)</div>
+    <div style="overflow-x:auto;">
+    <table class="dbg-table">
+        <thead><tr><th>شماره</th><th>کد</th><th>نام</th><th>فعال است؟</th></tr></thead>
+        <tbody>
+            {% for c in all_currencies %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ c.code }}</td>
+                <td>{{ c.country_name }}</td>
+                <td class="{{ 'yes' if c.is_active else 'no' }}">{{ 'بلی' if c.is_active else 'خیر' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" style="padding:20px; color:#999;">
+                هیچ ارزی در دیتابیس نیست — یعنی اسکریپت activate_currencies.py روی این فایل دیتابیس اجرا نشده است.
+            </td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<p style="font-size:12px; color:#666; padding:0 10px;">
+    اگر لیست بالا خالی است یا هیچ ارزی «بلی» ندارد: فایل <code>activate_currencies.py</code> را کنار همان فایل <code>hesab_karkhane.db</code>ی
+    که مسیرش بالا نوشته شده قرار دهید و دوباره اجرا کنید. اگر لیست ارزها اینجا درست نشان داده می‌شود ولی در فرم بانک خالی است،
+    مشکل جای دیگری است و لطفاً به من خبر بدهید.
+</p>
+{% endblock %}

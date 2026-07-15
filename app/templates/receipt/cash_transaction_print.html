@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>{{ doc_title }} #{{ ct.id }}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { background:#f0f0f0; padding:20px; }
+    .doc { max-width:750px; margin:0 auto; background:#fff; border:1px solid {{ theme_color }}; border-radius:6px; overflow:hidden; }
+
+    .brand-header {
+        background:#fff; border-bottom:2px solid {{ theme_color }}; padding:14px 18px;
+        display:flex; align-items:center; justify-content:space-between;
+    }
+    .brand-header .names { text-align:center; flex:1; }
+    .brand-header .names .fa-name { font-size:15px; font-weight:bold; color:{{ theme_color }}; }
+    .brand-header .names .en-name { font-size:11px; color:{{ theme_color }}; margin-top:2px; }
+    .brand-logo {
+        width:56px; height:56px; border-radius:50%; background:{{ theme_color }}; color:#fff;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        font-size:16px; font-weight:bold; line-height:1.1; flex-shrink:0;
+    }
+    .brand-logo small { font-size:8px; font-weight:normal; }
+
+    .title-bar { text-align:center; padding:8px; font-size:17px; font-weight:bold; color:{{ theme_color }}; border-bottom:1px solid {{ theme_light }}; }
+
+    table.header-table { width:100%; border-collapse:collapse; }
+    table.header-table td { border:1px solid {{ theme_light }}; padding:7px 12px; font-size:12.5px; }
+    .label-cell { background:{{ theme_bg }}; text-align:right; font-weight:bold; color:{{ theme_color }}; width:150px; }
+    .value-cell { text-align:right; }
+
+    table.doc-table { width:100%; border-collapse:collapse; margin-top:-1px; }
+    table.doc-table th {
+        background:{{ theme_color }}; color:#fff; font-size:12.5px; font-weight:bold; padding:9px 10px;
+        text-align:center; border:1px solid {{ theme_color }};
+    }
+    table.doc-table td {
+        font-size:12.5px; padding:9px 10px; text-align:center; border:1px solid {{ theme_light }};
+    }
+    .amount-cell { color:{{ theme_color }}; font-weight:bold; }
+
+    table.summary { width:100%; border-collapse:collapse; margin-top:-1px; }
+    table.summary td { border:1px solid {{ theme_light }}; padding:7px 12px; font-size:12.5px; }
+    .summary-label { background:{{ theme_bg }}; font-weight:bold; color:{{ theme_color }}; width:60%; text-align:right; }
+    .summary-value { text-align:right; font-weight:bold; }
+
+    .sign-row { display:flex; justify-content:space-between; padding:30px 20px 16px 20px; font-size:12.5px; font-weight:bold; color:#333; }
+    .sign-row div { flex:1; text-align:center; }
+
+    .note-row { padding:8px 16px; font-size:11px; color:#888; text-align:center; border-top:1px solid {{ theme_light }}; }
+
+    @media print {
+        body { background:#fff; padding:0; }
+        .no-print { display:none; }
+        .doc { border:none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="no-print" style="text-align:center; margin-bottom:14px;">
+    <button onclick="window.print()" style="padding:8px 20px; background:{{ theme_color }}; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px;">چاپ سند</button>
+</div>
+
+<div class="doc">
+
+    <div class="brand-header">
+        <div class="brand-logo">{% if company and company.logo_filename %}<img src="{{ url_for('static', filename=company.logo_filename) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}TH<small>هرات</small>{% endif %}</div>
+        <div class="names">
+            <div class="fa-name">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+            <div class="en-name">{{ company.latin_name if company and company.latin_name else 'Tek Food and Non-Alcoholic Beverage Manufacturing' }}</div>
+        </div>
+        <div style="width:56px;"></div>
+    </div>
+
+    <div class="title-bar">{{ doc_title }}</div>
+
+    <table class="header-table">
+        <tr>
+            <td class="value-cell">{{ ct.id }}</td>
+            <td class="label-cell">شماره سند</td>
+            <td class="value-cell">{{ ct.j_year }}-{{ '%02d'|format(ct.j_month) }}-{{ '%02d'|format(ct.j_day) }}</td>
+            <td class="label-cell">تاریخ</td>
+        </tr>
+        <tr>
+            <td class="value-cell">{{ ct.bank.name if ct.bank else '-' }}</td>
+            <td class="label-cell">بانک/صندوق</td>
+            <td class="value-cell">{{ ct.check_no or '-' }}</td>
+            <td class="label-cell">نمبر چک</td>
+        </tr>
+    </table>
+
+    <table class="doc-table">
+        <thead>
+            <tr>
+                <th>{{ party_label }}</th>
+                <th>نوع پول</th>
+                <th>مقدار</th>
+                <th>نوع حساب</th>
+                <th>توضیحات</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ ct.party_name or '-' }}</td>
+                <td>{{ ct.currency.code if ct.currency else '-' }}</td>
+                <td class="amount-cell">{{ '{:,.0f}'.format(ct.amount or 0) }}</td>
+                <td>{{ transaction_type_label }}</td>
+                <td>{{ ct.notes or '-' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if balance is not none %}
+    <table class="summary">
+        <tr>
+            <td class="summary-label">مانده حساب جاری {{ party_label }} پس از این سند</td>
+            <td class="summary-value">{{ '{:,.0f}'.format(balance) }} {{ ct.currency.code if ct.currency else '' }}</td>
+        </tr>
+    </table>
+    {% endif %}
+
+    <div class="sign-row">
+        <div>امضاء {{ party_label }}</div>
+        <div>امضاء حسابدار</div>
+        <div>امضاء مدیریت</div>
+    </div>
+
+    <div class="note-row">یادداشت: این سند بدون مهر و امضاء معتبر نمی‌باشد.</div>
+
+</div>
+
+</body>
+</html>

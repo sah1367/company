@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}حسابات فروشنده کالا{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.summary-table { border-collapse:collapse; margin:20px; }
+    table.summary-table td { border:1px solid #ccc; padding:8px 14px; font-size:13px; }
+    .summary-label { background:#f0f0f0; font-weight:bold; text-align:right; width:150px; }
+    .balance-row td { background:#ffe97a !important; font-weight:bold; }
+
+    .actions-panel { border:1px solid #ccc; border-radius:4px; margin:20px; overflow:hidden; max-width:600px; }
+    .actions-head { background:#555; color:#fff; text-align:center; font-size:13px; font-weight:bold; padding:8px; }
+    .actions-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .actions-grid a {
+        display:block; text-align:center; padding:14px 10px; background:#fff; border:1px solid #ddd;
+        color:#222; text-decoration:none; font-size:13px; font-weight:bold;
+    }
+    .actions-grid a:hover { background:#eaf4ff; color:#1e88e5; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">حسابات فروشنده کالا</div>
+</div>
+
+<table class="summary-table">
+    <tr>
+        <td>{{ vendor.book_no or '' }}</td>
+        <td class="summary-label">شماره کتابچه</td>
+    </tr>
+    <tr>
+        <td>{{ vendor.name }}</td>
+        <td class="summary-label">نام فروشنده</td>
+    </tr>
+    <tr>
+        <td>{{ vendor.phone or '' }}</td>
+        <td class="summary-label">شماره تلفن</td>
+    </tr>
+    <tr>
+        <td>{{ vendor.address or '0' }}</td>
+        <td class="summary-label">آدرس</td>
+    </tr>
+    <tr class="balance-row">
+        <td>{{ '{:,.1f}'.format(balance) }}</td>
+        <td>AFN</td>
+    </tr>
+</table>
+
+<div class="actions-panel">
+    <div class="actions-head">جزئیات حسابات فروشنده</div>
+    <div class="actions-grid">
+        <a href="{{ url_for('main.vendor_current_account', vendor_id=vendor.id) }}">حساب جاری</a>
+        <a href="{{ url_for('main.vendor_payments_report', vendor_id=vendor.id) }}">گزارش پرداختی</a>
+        <a href="{{ url_for('main.vendor_summary', vendor_id=vendor.id) }}">صورت حساب کلی فروشنده</a>
+        <a href="{{ url_for('main.vendor_date_range', vendor_id=vendor.id) }}">صورت حساب تاریخ وار</a>
+        <a href="{{ url_for('main.vendor_payment_form') }}">پرداخت به فروشنده کالا</a>
+    </div>
+</div>
+{% endblock %}

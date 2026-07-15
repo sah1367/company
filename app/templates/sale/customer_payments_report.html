@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}گزارشات پرداختی مشتری{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+    .total-row td { background:#f0f0f0; font-weight:bold; }
+</style>
+
+<a href="{{ url_for('main.customer_account', customer_id=customer.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">گزارشات پرداختی — {{ customer.name }}</div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>تاریخ</th>
+                <th>مقدار دریافتی</th>
+                <th>واحدپول</th>
+                <th>توضیحات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payments %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ p.j_year }}-{{ '%02d'|format(p.j_month) }}-{{ '%02d'|format(p.j_day) }}</td>
+                <td>{{ '{:,.0f}'.format(p.amount) }}</td>
+                <td>{{ p.currency or '-' }}</td>
+                <td>{{ p.notes or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">هیچ پرداختی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+        {% if payments %}
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="2">جمع کل</td>
+                <td>{{ '{:,.0f}'.format(total) }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+{% endblock %}

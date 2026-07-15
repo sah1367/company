@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}موجودی انبار{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:14px; font-weight:bold;
+        padding:12px 16px;
+    }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:16px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:90px; text-align:right; }
+    .field-row select { width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; margin-top:10px; }
+    .btn-search { background:#1e88e5; color:#fff; border:none; padding:8px 30px; border-radius:4px; cursor:pointer; font-size:13px; }
+
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .qty-low { color:#c62828; font-weight:bold; }
+    .qty-ok { color:#2e7d32; font-weight:bold; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">کتگوری / گدام</div>
+    <div class="panel-body">
+        <form method="get">
+            <div class="field-row">
+                <select name="category_id">
+                    <option value="">-- همه --</option>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {% if selected_category == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>کتگوری</label>
+            </div>
+            <div class="field-row">
+                <select name="stock_id">
+                    <option value="">-- همه --</option>
+                    {% for s in stocks %}
+                    <option value="{{ s.id }}" {% if selected_stock == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>گدام</label>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-search">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+<div class="panel">
+    <div class="panel-head">نتیجه جستجو</div>
+    <div class="panel-body" style="padding:14px 20px;">
+        <input type="text" id="liveSearch" placeholder="جستجو جنس..."
+               style="width:100%; max-width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>نام جنس</th>
+                <th>کتگوری</th>
+                <th>گدام</th>
+                <th>موجودی فعلی</th>
+                <th>رزروشده</th>
+                <th>قابل فروش</th>
+                <th>واحد اندازه گیری</th>
+                <th>آخرین قیمت (USD)</th>
+                <th>ارزش کل (USD)</th>
+            </tr>
+        </thead>
+        <tbody id="stockReportBody">
+            {% for r in results %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="sr-name">{{ r.item_name }}</td>
+                <td>{{ r.category_name }}</td>
+                <td>{{ r.stock_name }}</td>
+                <td class="{{ 'qty-low' if r.current_qty <= 0 else 'qty-ok' }}">{{ '%.2f'|format(r.current_qty) }}</td>
+                <td style="color:#f57f17;">{{ '%.2f'|format(r.reserved_qty) }}</td>
+                <td style="color:#1565c0; font-weight:bold;">{{ '%.2f'|format(r.available_qty) }}</td>
+                <td>{{ r.unit_name }}</td>
+                <td>{{ '%.2f'|format(r.last_price) }}</td>
+                <td>{{ '%.2f'|format(r.current_qty * r.last_price) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="10" style="text-align:center; padding:20px; color:#999;">موجودی‌ای با این فیلتر یافت نشد</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+
+<script>
+var srSearchBox = document.getElementById('liveSearch');
+if (srSearchBox) {
+    srSearchBox.addEventListener('input', function() {
+        var term = this.value.trim().toLowerCase();
+        var rows = document.querySelectorAll('#stockReportBody tr');
+        rows.forEach(function(row) {
+            var nameCell = row.querySelector('.sr-name');
+            if (!nameCell) return;
+            var text = nameCell.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    });
+}
+</script>
+{% endblock %}

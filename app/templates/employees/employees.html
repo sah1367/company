@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}ثبت کارمند{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; display:flex; justify-content:space-between; }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:140px; }
+    .field-row input, .field-row select { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 12px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 12px; font-size:12px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .act-link { color:#555; text-decoration:none; margin-left:10px; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>ثبت‌نام کارمند</span></div>
+    <div class="panel-body">
+        <form method="post" enctype="multipart/form-data">
+            {% if edit_emp %}<input type="hidden" name="emp_id" value="{{ edit_emp.id }}">{% endif %}
+            <div class="field-row" style="align-items:flex-start;">
+                <div>
+                    <input type="file" name="photo" accept=".png,.jpg,.jpeg,.webp"><br>
+                    {% if edit_emp and edit_emp.photo %}
+                    <img src="{{ url_for('static', filename=edit_emp.photo) }}" style="width:80px; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    {% endif %}
+                </div>
+                <label>عکس کارمند</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="name" required value="{{ edit_emp.name if edit_emp else '' }}">
+                <label>نام کارمند</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="father_name" value="{{ edit_emp.father_name if edit_emp else '' }}">
+                <label>نام پدر</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="tazkira_no" value="{{ edit_emp.tazkira_no if edit_emp else '' }}">
+                <label>شماره تذکره/کارت هویت</label>
+            </div>
+            <div class="field-row">
+                <select name="category_id">
+                    <option value="">-- انتخاب کتگوری --</option>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {% if edit_emp and edit_emp.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>کتگوری کارمند</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="position" value="{{ edit_emp.position if edit_emp else '' }}">
+                <label>وظیفه/سمت</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="phone" value="{{ edit_emp.phone if edit_emp else '' }}">
+                <label>تلفن</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="address" value="{{ edit_emp.address if edit_emp else '' }}">
+                <label>آدرس</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.employees') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="جستجو" style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>شماره</th><th>عکس</th><th>نام کارمند</th><th>نام پدر</th><th>تذکره</th><th>کتگوری</th><th>وظیفه</th><th>تلفن</th><th>آدرس</th><th style="width:140px">عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="empTableBody">
+            {% for e in employee_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if e.photo %}
+                    <img src="{{ url_for('static', filename=e.photo) }}" style="width:36px; height:36px; object-fit:cover; border-radius:4px;">
+                    {% else %}—{% endif %}
+                </td>
+                <td class="emp-name">{{ e.name }}</td>
+                <td>{{ e.father_name or '-' }}</td>
+                <td>{{ e.tazkira_no or '-' }}</td>
+                <td>{{ e.category.name if e.category else '-' }}</td>
+                <td>{{ e.position or '-' }}</td>
+                <td>{{ e.phone or '-' }}</td>
+                <td>{{ e.address or '-' }}</td>
+                <td>
+                    <a href="{{ url_for('main.employee_account', employee_id=e.id) }}" class="act-link">📒 حسابات</a>
+                    <a href="{{ url_for('main.employees', edit=e.id) }}" class="act-link">✏ ویرایش</a>
+                    <a href="{{ url_for('main.employee_delete', id=e.id) }}" class="act-link" onclick="return confirm('حذف شود؟')">🗑 حذف</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="10" style="text-align:center; padding:20px; color:#999;">هیچ کارمندی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    document.querySelectorAll('#empTableBody tr').forEach(function(row) {
+        var cell = row.querySelector('.emp-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

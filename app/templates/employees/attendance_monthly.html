@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}لیست حاضری ماهانه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .month-nav { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .month-nav a { background:#fff; color:#1e88e5; text-decoration:none; padding:4px 12px; border-radius:4px; font-weight:bold; }
+    .month-nav span { color:#fff; }
+
+    table.grid-table { width:100%; border-collapse:collapse; font-size:11px; }
+    table.grid-table th, table.grid-table td { border:1px solid #ddd; padding:4px 3px; text-align:center; white-space:nowrap; }
+    table.grid-table th { background:#1e88e5; color:#fff; }
+    table.grid-table th.friday { background:#5c6bc0; }
+    table.grid-table td.friday { background:#eef0fb; }
+    table.grid-table td.name-cell { text-align:right; font-weight:bold; background:#f7fbff; position:sticky; right:0; }
+    table.grid-table td.total-cell { font-weight:bold; color:#1565c0; background:#eef6ff; }
+    table.grid-table td.present-cell { color:#2e7d32; font-weight:bold; }
+    table.grid-table td.absent-cell { color:#c62828; }
+    table.grid-table td.leave-cell { color:#f57f17; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>لیست حاضری ماهانه کارمندان</span>
+        <div class="month-nav">
+            <a href="{{ url_for('main.employee_attendance_monthly', jy=prev_jy, jm=prev_jm) }}">◀ برج قبل</a>
+            <span>{{ jy }} / {{ '%02d'|format(jm) }}</span>
+            <a href="{{ url_for('main.employee_attendance_monthly', jy=next_jy, jm=next_jm) }}">برج بعد ▶</a>
+            <a href="{{ url_for('main.employee_attendance_monthly', jy=today.year, jm=today.month) }}">برج جاری</a>
+            <a href="{{ url_for('main.employee_attendance') }}">+ ثبت حاضری روزانه</a>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="grid-table">
+        <thead>
+            <tr>
+                <th>میزان</th>
+                {% for d in day_range %}
+                <th class="{{ 'friday' if d in friday_days }}">{{ d }}</th>
+                {% endfor %}
+                <th style="min-width:120px;">نام کارمند</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in employee_list %}
+            <tr>
+                <td class="total-cell">{{ totals.get(e.id, 0) }}</td>
+                {% for d in day_range %}
+                    {% set rec = grid.get(e.id, {}).get(d) %}
+                    <td class="{{ 'friday' if d in friday_days }} {% if rec %}{{ rec.status }}-cell{% endif %}">
+                        {% if rec %}
+                            {% if rec.status == 'present' %}
+                                {{ '%d/%02d'|format(rec.worked_hours|int, ((rec.worked_hours % 1) * 60)|int) if rec.worked_hours else '✓' }}
+                            {% elif rec.status == 'absent' %}غ
+                            {% else %}ر{% endif %}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+                <td class="name-cell">{{ e.name }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="{{ day_range|length + 2 }}" style="padding:20px; color:#999;">هیچ کارمندی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <p style="font-size:11px; color:#888; padding:10px 16px;">
+        ✓/ساعت = حاضر، غ = غایب، ر = رخصتی، ستون آبی = جمعه. عدد داخل خانه‌ی حاضری به شکل «ساعت/دقیقه» کارکرد آن روز است.
+    </p>
+</div>
+{% endblock %}

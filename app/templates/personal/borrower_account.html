@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}خلص حساب قرضه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.summary-table { border-collapse:collapse; margin:20px; }
+    table.summary-table td { border:1px solid #ccc; padding:8px 14px; font-size:13px; }
+    .summary-label { background:#f0f0f0; font-weight:bold; text-align:right; width:150px; }
+    .balance-row td { background:#ffe97a !important; font-weight:bold; }
+    .balance-positive { color:#c62828; }
+    .balance-negative { color:#2e7d32; }
+
+    .actions-panel { border:1px solid #ccc; border-radius:4px; margin:20px; overflow:hidden; max-width:600px; }
+    .actions-head { background:#555; color:#fff; text-align:center; font-size:13px; font-weight:bold; padding:8px; }
+    .actions-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .actions-grid a {
+        display:block; text-align:center; padding:14px 10px; background:#fff; border:1px solid #ddd;
+        color:#222; text-decoration:none; font-size:13px; font-weight:bold;
+    }
+    .actions-grid a:hover { background:#eaf4ff; color:#1e88e5; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">خلص حساب قرضه — {{ borrower.name }}</div>
+</div>
+
+<table class="summary-table">
+    <tr>
+        <td>{{ borrower.book_no or '' }}</td>
+        <td class="summary-label">شماره کتاب</td>
+    </tr>
+    <tr>
+        <td>{{ borrower.name }}</td>
+        <td class="summary-label">نام قرضه دهنده/گیرنده</td>
+    </tr>
+    <tr>
+        <td>{{ borrower.phone or '' }}</td>
+        <td class="summary-label">شماره تماس</td>
+    </tr>
+    <tr>
+        <td>{{ borrower.address or '0' }}</td>
+        <td class="summary-label">آدرس</td>
+    </tr>
+    <tr class="balance-row">
+        <td class="{{ 'balance-positive' if balance >= 0 else 'balance-negative' }}">
+            {{ '{:,.1f}'.format(balance) }}
+            {% if balance > 0 %} (بدهی ما به او){% elif balance < 0 %} (طلب ما از او){% endif %}
+        </td>
+        <td>مانده حساب</td>
+    </tr>
+</table>
+
+<div class="actions-panel">
+    <div class="actions-head">جزئیات حسابات قرضه</div>
+    <div class="actions-grid">
+        <a href="{{ url_for('main.borrower_summary', borrower_id=borrower.id) }}">جزئیات کامل حساب (ریز تراکنش‌ها)</a>
+        <a href="{{ url_for('main.borrower_opening') }}">حساب افتتاحیه قرضه</a>
+        <a href="{{ url_for('main.borrowers', edit=borrower.id) }}">ویرایش مشخصات</a>
+        <a href="{{ url_for('main.borrower_search') }}">جستجوی قرضه دیگر</a>
+    </div>
+
+</div>
+{% endblock %}

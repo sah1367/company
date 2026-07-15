@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}تعریف فروشگاه{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .form-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:18px; }
+    .form-row label { font-size:13px; color:#333; white-space:nowrap; width:120px; text-align:left; }
+    .form-row input { width:320px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    .logo-preview { width:70px; height:70px; border-radius:6px; object-fit:cover; border:1px solid #ccc; }
+    .logo-preview-empty { width:70px; height:70px; border-radius:6px; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center; color:#999; font-size:11px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head"><span>تعریف فروشگاه</span></div>
+    <div class="panel-body">
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-row">
+                <input type="text" name="name" required value="{{ settings.name or '' }}">
+                <label>فروشگاه</label>
+            </div>
+            <div class="form-row">
+                <input type="text" name="latin_name" value="{{ settings.latin_name or '' }}">
+                <label>نام لاتین</label>
+            </div>
+            <div class="form-row">
+                <input type="text" name="phone1" value="{{ settings.phone1 or '' }}">
+                <label>شماره تلفن اول</label>
+            </div>
+            <div class="form-row">
+                <input type="text" name="phone2" value="{{ settings.phone2 or '' }}">
+                <label>شماره تلفن دوم</label>
+            </div>
+            <div class="form-row">
+                <input type="text" name="phone_fixed" value="{{ settings.phone_fixed or '' }}">
+                <label>شماره تلفن ثابت</label>
+            </div>
+            <div class="form-row">
+                <input type="text" name="address" value="{{ settings.address or '' }}">
+                <label>آدرس فروشگاه</label>
+            </div>
+            <div class="form-row">
+                <input type="email" name="email" value="{{ settings.email or '' }}">
+                <label>ایمیل آدرس</label>
+            </div>
+            <div class="form-row">
+                <div style="width:320px; display:flex; align-items:center; gap:12px;">
+                    {% if settings.logo_filename %}
+                        <img class="logo-preview" src="{{ url_for('static', filename=settings.logo_filename) }}">
+                    {% else %}
+                        <div class="logo-preview-empty">بدون لوگو</div>
+                    {% endif %}
+                    <input type="file" name="logo" accept=".png,.jpg,.jpeg,.gif,.webp" style="width:auto;">
+                </div>
+                <label>آپلود لوگو</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.index') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<p style="text-align:center; color:#999; font-size:12px;">
+    این اطلاعات به‌صورت خودکار در سربرگ فاکتورها، رسیدها و گزارش‌های سیستم استفاده می‌شود.
+</p>
+{% endblock %}

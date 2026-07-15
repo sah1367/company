@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .placeholder-body { padding:60px 20px; text-align:center; color:#888; }
+    .placeholder-body .icon { font-size:40px; margin-bottom:12px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>گزارش {{ title }}</span>
+        <a href="{{ back_url or url_for('main.reports') }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+    <div class="placeholder-body">
+        <div class="icon">🛠️</div>
+        محتوای گزارش «{{ title }}» به‌زودی تکمیل می‌شود.
+    </div>
+</div>
+{% endblock %}

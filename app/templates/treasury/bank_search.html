@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}حسابات بانک{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:12px 16px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:20px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; }
+    .field-row input { width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:10px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">حسابات بانک</div>
+    <div class="panel-body">
+        <div class="field-row">
+            <input type="text" id="bankNameInput" list="bankNamesList" autocomplete="off">
+            <datalist id="bankNamesList">
+                {% for b in bank_list %}
+                <option value="{{ b.name }}">
+                {% endfor %}
+            </datalist>
+            <label>نام بانک</label>
+        </div>
+        <div class="btn-row">
+            <button type="button" class="btn-blue" onclick="goToDetails()">جزئیات</button>
+            <button type="button" class="btn-blue" onclick="goToDetails()">جستجو</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var bankMap = {};
+{% for b in bank_list %}
+bankMap["{{ b.name }}"] = {{ b.id }};
+{% endfor %}
+
+function goToDetails() {
+    var name = document.getElementById('bankNameInput').value.trim();
+    var id = bankMap[name];
+    if (!id) {
+        alert('لطفاً یک بانک معتبر از لیست انتخاب کنید.');
+        return;
+    }
+    window.location.href = '/treasury/bank-account/' + id;
+}
+</script>
+{% endblock %}

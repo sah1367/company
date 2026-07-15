@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title|default('راپور فروشندگان') }}{% endblock %}
+{% block content %}
+<style>
+    .pl-wrap { padding:10px 0; }
+    .pl-head {
+        background:linear-gradient(135deg,#1e9166,#16794f); color:#fff; border-radius:10px;
+        padding:22px 26px; text-align:center; margin-bottom:20px;
+    }
+    .pl-head .company { font-size:16px; font-weight:bold; margin-bottom:10px; }
+    .pl-head .title { font-size:19px; font-weight:bold; margin-bottom:16px; }
+    .pl-head .actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+    .pl-head .actions button {
+        background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.4);
+        padding:7px 18px; border-radius:20px; font-size:13px; cursor:pointer;
+    }
+    .pl-head .actions button:hover { background:rgba(255,255,255,0.28); }
+    .pl-head a.back { color:#fff; font-size:12px; text-decoration:none; opacity:0.85; display:block; margin-top:10px; }
+
+    .pl-toolbar { display:flex; justify-content:flex-end; margin-bottom:12px; }
+    .pl-search { position:relative; max-width:280px; width:100%; }
+    .pl-search input {
+        width:100%; padding:9px 14px; border:1px solid #dfe6e2; border-radius:20px; font-size:13px;
+        box-sizing:border-box;
+    }
+
+    .pl-table-wrap { border:1px solid #e2ede8; border-radius:8px; overflow-x:auto; }
+    table.pl-table { width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap; }
+    table.pl-table th {
+        background:#e9f5ef; color:#1b6b46; font-weight:bold; padding:12px 10px; text-align:center;
+    }
+    table.pl-table td { padding:11px 10px; text-align:center; border-top:1px solid #eef4f1; }
+    table.pl-table tr:nth-child(even) td { background:#fafdfc; }
+    table.pl-table td.name { text-align:right; font-weight:600; color:#333; }
+    table.pl-table td.phone { direction:ltr; }
+
+    .bal-cell { direction:ltr; display:inline-block; }
+    .bal-tag { font-size:10.5px; border-radius:10px; padding:1px 7px; margin-inline-end:4px; }
+    .bal-debit { color:#c62828; }
+    .bal-debit .bal-tag { background:#fdecea; color:#c62828; }
+    .bal-credit { color:#1b6b46; }
+    .bal-credit .bal-tag { background:#e9f5ef; color:#1b6b46; }
+    .bal-zero { color:#999; }
+
+    .pl-empty { text-align:center; color:#999; padding:40px 0; }
+
+    tfoot td {
+        background:linear-gradient(135deg,#e6a817,#b8860b) !important; color:#fff; font-weight:bold;
+        border-top:2px solid #8a6508; padding:12px 10px;
+    }
+    tfoot td.name { text-align:center; }
+    tfoot .bal-cell { color:#fff; }
+    tfoot .bal-debit .bal-tag, tfoot .bal-credit .bal-tag { background:rgba(255,255,255,0.25); color:#fff; }
+</style>
+
+<div class="pl-wrap">
+    <div class="pl-head">
+        <div class="company">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+        <div class="title">{{ title_company_line|default('لیست حساب فروشندگان') }}</div>
+        <div class="actions">
+            <button onclick="window.print()">🖨️ چاپ / PDF</button>
+        </div>
+        <a class="back" href="{{ back_url }}">◀ بازگشت به راپورهای صرافی</a>
+    </div>
+
+    <div class="pl-toolbar">
+        <form class="pl-search" method="get">
+            <input type="text" name="q" value="{{ search }}" placeholder="{{ search_placeholder|default('جستجو نام فروشنده...') }}">
+        </form>
+    </div>
+
+    <div class="pl-table-wrap">
+        <table class="pl-table">
+            <thead>
+                <tr>
+                    <th>شماره</th>
+                    <th>ای دی</th>
+                    <th>{{ name_col_title|default('نام فروشنده') }}</th>
+                    <th>تلیفون</th>
+                    {% for code, label in report_currencies %}
+                    <th>{{ label }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.no }}</td>
+                    <td>{{ r.id }}</td>
+                    <td class="name">{{ r.name }}</td>
+                    <td class="phone">{{ r.phone or '-' }}</td>
+                    {% for code, label in report_currencies %}
+                    {% set amount = r.balances[code] %}
+                    <td>
+                        {% if amount|abs < 0.0001 %}
+                        <span class="bal-cell bal-zero">0</span>
+                        {% elif amount < 0 %}
+                        <span class="bal-cell bal-debit"><span class="bal-tag">بدهکار</span>{{ '{:,.0f}'.format(amount) }}</span>
+                        {% else %}
+                        <span class="bal-cell bal-credit"><span class="bal-tag">بستانکار</span>{{ '{:,.0f}'.format(amount) }}</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% else %}
+                <tr><td colspan="{{ 4 + report_currencies|length }}" class="pl-empty">هیچ {{ empty_label|default('فروشنده‌ای') }} یافت نشد</td></tr>
+                {% endfor %}
+            </tbody>
+            {% if rows %}
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="name">جمع کل</td>
+                    {% for code, label in report_currencies %}
+                    {% set amount = totals_row[code] %}
+                    <td>
+                        {% if amount|abs < 0.0001 %}
+                        <span class="bal-cell bal-zero">0</span>
+                        {% elif amount < 0 %}
+                        <span class="bal-cell bal-debit"><span class="bal-tag">بدهکار</span>{{ '{:,.0f}'.format(amount) }}</span>
+                        {% else %}
+                        <span class="bal-cell bal-credit"><span class="bal-tag">بستانکار</span>{{ '{:,.0f}'.format(amount) }}</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

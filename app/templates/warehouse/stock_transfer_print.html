@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>سند انتقال بین گدامها</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { background:#fff; padding:20px; }
+    .doc { max-width:780px; margin:0 auto; border:2px solid #1e88e5; }
+
+    .doc-header {
+        display:flex; justify-content:space-between; align-items:center;
+        padding:10px 16px; border-bottom:2px solid #1e88e5;
+    }
+    .doc-header .center { text-align:center; flex:1; }
+    .doc-header .company-fa { font-weight:bold; font-size:15px; color:#222; }
+    .doc-header .company-en { font-size:12px; color:#444; margin-top:2px; }
+    .doc-header .side { font-size:11px; color:#222; text-align:center; width:150px; }
+    .doc-header .side strong { display:block; margin-bottom:2px; }
+    .doc-header img.logo { width:55px; height:55px; object-fit:contain; }
+
+    .doc-subheader {
+        text-align:center; font-size:11px; color:#222; padding:6px 10px;
+        border-bottom:1px solid #cfe0ee;
+    }
+    .doc-contacts {
+        text-align:center; font-size:11px; color:#222; padding:4px 10px;
+        border-bottom:1px solid #cfe0ee;
+    }
+    .doc-watts {
+        text-align:center; font-size:11px; color:#222; padding:4px 10px;
+        border-bottom:2px solid #1e88e5;
+    }
+
+    .doc-meta {
+        display:flex; justify-content:space-between; padding:8px 16px;
+        font-size:12px; border-bottom:2px solid #1e88e5;
+    }
+
+    table.items { width:100%; border-collapse:collapse; }
+    table.items th {
+        background:#1e88e5; color:#fff; font-size:11px; padding:7px 8px; text-align:center;
+        border:1px solid #1a75c4;
+    }
+    table.items td {
+        font-size:11px; padding:7px 8px; text-align:center; border:1px solid #cfe0ee; height:24px;
+    }
+
+    .note-row { padding:6px 16px; font-size:12px; border-top:1px solid #cfe0ee; }
+
+    .info-row {
+        display:flex; border-top:1px solid #cfe0ee;
+    }
+    .info-row > div {
+        flex:1; padding:8px 16px; font-size:12px; text-align:center; border-right:1px solid #cfe0ee;
+    }
+    .info-row > div:last-child { border-right:none; }
+
+    .responsibility {
+        padding:14px 16px; font-size:12px; font-weight:bold; text-align:center;
+        border-top:1px solid #cfe0ee;
+    }
+
+    .signatures {
+        display:flex; justify-content:space-between; padding:16px 16px 30px 16px;
+        font-size:12px; border-top:1px solid #cfe0ee;
+    }
+
+    .doc-address {
+        text-align:center; font-size:11px; padding:8px 10px;
+        border-top:2px solid #1e88e5;
+    }
+
+    @media print {
+        body { padding:0; }
+        .no-print { display:none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="no-print" style="text-align:center; margin-bottom:14px;">
+    <button onclick="window.print()" style="padding:8px 20px; background:#1e88e5; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px;">چاپ سند</button>
+</div>
+
+<div class="doc">
+
+    <div class="doc-header">
+        <div class="side">
+            شماره نماینده مرز:<br>
+            <strong>(+93)700251103</strong>
+        </div>
+        <div class="center">
+            <div class="company-fa">شرکت تجارتی عبدالغفار عظیمی</div>
+            <div class="company-en">Abdul Ghafar Azimi LTD</div>
+        </div>
+        <div class="side">
+            شماره گدامدار:<br>
+            <strong>(+93)711778170</strong>
+        </div>
+    </div>
+
+    <div class="doc-subheader">
+        وارد کننده کود سفید،کود سیاه، آرد و سمنت
+    </div>
+
+    <div class="doc-contacts">
+        شمارههای تماس: 0792929776 -0707609008- 0707609008
+    </div>
+
+    <div class="doc-watts">
+        شماره واتس آپ:0707609008
+    </div>
+
+    <div class="doc-meta">
+        <div>شماره: {{ t.id }}</div>
+        <div>تاریخ: {{ t.j_year }}-{{ '%02d'|format(t.j_month) }}-{{ '%02d'|format(t.j_day) }}</div>
+    </div>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width:50px">شماره</th>
+                <th>نام جنس</th>
+                <th>گدام مبدا</th>
+                <th>مقدار انتقالی</th>
+                <th>تعداد</th>
+                <th>گدام مقصد</th>
+                <th>تفصیلات</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>{{ t.item_name }}</td>
+                <td>{{ t.source_stock.name if t.source_stock else '' }}</td>
+                <td>{{ t.amount }}</td>
+                <td>{{ t.count }}</td>
+                <td>{{ t.destination_stock.name if t.destination_stock else '' }}</td>
+                <td></td>
+            </tr>
+            <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
+
+    <div class="note-row">نوت: {{ t.notes or '' }}</div>
+
+    <div class="info-row">
+        <div>نام موتروان: {{ t.driver_name or '0' }}</div>
+        <div>رنگ و پلت: {{ t.plate_no or '0' }}</div>
+        <div>تلفن: {{ t.driver_phone or '0' }}</div>
+    </div>
+
+    <div class="info-row">
+        <div>کمیشن: {{ t.commission or '0' }}</div>
+    </div>
+
+    <div class="info-row">
+        <div>پیش کرایه: {{ t.advance_fare or '0' }}</div>
+        <div>کرایه فی تن: {{ t.fare_per_ton or '0' }}</div>
+        <div>جمله کرایه: {{ (t.advance_fare or 0) + (t.fare_per_ton or 0) }}</div>
+    </div>
+
+    <div class="responsibility">
+        بار بصورت کامل و سالم به موتروان تحویل داده شده و مسئولیت خراب شدن بار بدوش موتروان می باشد.
+    </div>
+
+    <div class="signatures">
+        <div>امضاء موتروان: ___________________</div>
+        <div>امضاء و مهر شرکت: ___________________</div>
+    </div>
+
+    <div class="doc-address">
+        آدرس: ولایت فراه روبروی امنیت ملی،مندوی کود فروشان
+    </div>
+
+</div>
+
+</body>
+</html>

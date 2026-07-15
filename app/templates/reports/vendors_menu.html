@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}راپورهای فروشنده کالا{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:40px 20px; display:flex; justify-content:center; }
+
+    .report-card { width:600px; max-width:100%; border:1px solid #dbe7f2; border-radius:4px; background:#f5f9fd; padding:18px; }
+    .report-head {
+        background:#1565c0; color:#fff; text-align:center; font-size:16px; font-weight:bold;
+        padding:12px; border-radius:4px; margin-bottom:22px;
+    }
+    .report-btn {
+        display:block; text-align:center; background:#1976d2; color:#fff; text-decoration:none;
+        padding:11px 6px; border-radius:20px; font-size:13px; font-weight:bold;
+        box-shadow:0 1px 3px rgba(0,0,0,0.2);
+    }
+    .report-btn:hover { background:#0d47a1; }
+    .report-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    .report-grid:last-child { margin-bottom:0; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>راپورهای بخش فروشنده</span>
+        <a href="{{ url_for('main.reports') }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+    <div class="panel-body">
+        <div class="report-card">
+            <div class="report-head">راپورهای فروشنده کالا</div>
+
+            <div class="report-grid">
+                <a href="{{ url_for('main.report_page', slug='items_bought_by_item') }}" class="report-btn">
+                    {{ vendors_pages['items_bought_by_item'] }}
+                </a>
+                <a href="{{ url_for('main.report_page', slug='purchase_bill_details') }}" class="report-btn">
+                    {{ vendors_pages['purchase_bill_details'] }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

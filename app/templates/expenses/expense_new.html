@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}ثبت مصارف{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:120px; }
+    .field-row input, .field-row select { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .field-row textarea { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; font-family:Tahoma; resize:vertical; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">ثبت مصارف</div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_e %}
+            <input type="hidden" name="e_id" value="{{ edit_e.id }}">
+            {% endif %}
+
+            <div class="field-row">
+                <select name="category_id">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for c in category_list %}
+                    <option value="{{ c.id }}" {% if edit_e and edit_e.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>کتگوری مصارف</label>
+            </div>
+
+            <div class="field-row">
+                <input type="text" name="recipient" required value="{{ edit_e.recipient if edit_e else '' }}">
+                <label>گیرنده مصرف</label>
+            </div>
+
+            <div class="field-row">
+                <textarea name="notes" rows="4">{{ edit_e.notes if edit_e else '' }}</textarea>
+                <label>توضیحات</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.expense_new') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>معلومات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="جستجوی معلومات"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th style="width:60px">شماره</th>
+                <th>نام مصرف</th>
+                <th>کتگوری مصارف</th>
+                <th>توضیحات</th>
+                <th style="width:80px">ویرایش</th>
+                <th style="width:80px">حذف</th>
+            </tr>
+        </thead>
+        <tbody id="expTableBody">
+            {% for e in expense_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="exp-name">{{ e.recipient }}</td>
+                <td>{{ e.category.name if e.category else '-' }}</td>
+                <td>{{ e.notes or '-' }}</td>
+                <td><a href="{{ url_for('main.expense_new', edit=e.id) }}" class="act-link">✏ ویرایش</a></td>
+                <td><a href="{{ url_for('main.expense_delete', id=e.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑 حذف</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">هیچ مصرفی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#expTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.exp-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

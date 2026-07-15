@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}گزارش کارمندان{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+
+    table.rep-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    table.rep-table th { background:#1e88e5; color:#fff; padding:8px 10px; text-align:center; white-space:nowrap; }
+    table.rep-table td { padding:7px 10px; border-bottom:1px solid #eee; text-align:center; white-space:nowrap; }
+    table.rep-table td.desc-cell { text-align:right; white-space:normal; }
+
+    .bal-positive { color:#c62828; font-weight:bold; }
+    .bal-negative { color:#2e7d32; font-weight:bold; }
+    .amt-in { color:#2e7d32; font-weight:bold; }
+    .amt-out { color:#c62828; font-weight:bold; }
+
+    .search-panel-body { padding:24px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:16px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; }
+    .field-row input { width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:10px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>جستجوی کارمند</span>
+        <a href="{{ url_for('main.reports') }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+    <div class="search-panel-body">
+        <form method="get" id="employeeSearchForm" onsubmit="return false;">
+            <div class="field-row">
+                <input type="text" id="employeeNameInput" list="employeeNamesList" autocomplete="off" placeholder="نام کارمند را وارد یا انتخاب کنید">
+                <datalist id="employeeNamesList">
+                    {% for e in employee_list %}
+                    <option value="{{ e.name }}" data-id="{{ e.id }}">
+                    {% endfor %}
+                </datalist>
+                <label>نام کارمند</label>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn-blue" onclick="goToEmployeeSummary()">صورت حساب کلی</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+var employeeMap = {};
+{% for e in employee_list %}
+employeeMap["{{ e.name }}"] = {{ e.id }};
+{% endfor %}
+
+function goToEmployeeSummary() {
+    var name = document.getElementById('employeeNameInput').value.trim();
+    var id = employeeMap[name];
+    if (!id) {
+        alert('لطفاً یک کارمند معتبر از لیست انتخاب کنید.');
+        return;
+    }
+    window.location.href = '/employees/account/' + id + '/summary';
+}
+</script>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>مانده حساب کارمندان (لیست کلی)</span>
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="rep-table">
+        <thead><tr><th>شماره</th><th>نام کارمند</th><th>وظیفه</th><th>مانده حساب</th></tr></thead>
+        <tbody>
+            {% for b in balances %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ b.employee.name }}</td>
+                <td>{{ b.employee.position or '-' }}</td>
+                <td class="{{ 'bal-positive' if b.balance < 0 else ('bal-negative' if b.balance > 0 else '') }}">
+                    {{ '{:,.0f}'.format(b.balance) }}
+                    {% if b.balance < 0 %} (بدهکار به شرکت){% elif b.balance > 0 %} (طلبکار از شرکت){% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" style="padding:20px; color:#999;">هیچ کارمندی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head"><span>تمام برد و رسید کارمندان</span></div>
+    <div style="overflow-x:auto;">
+    <table class="rep-table">
+        <thead><tr><th>شماره</th><th>تاریخ</th><th>کارمند</th><th>نوعیت</th><th>مبلغ</th><th>واحدپول</th><th>بانک</th><th class="desc-cell">توضیحات</th></tr></thead>
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ t.j_year }}-{{ '%02d'|format(t.j_month) }}-{{ '%02d'|format(t.j_day) }}</td>
+                <td>{{ t.party_name }}</td>
+                <td class="{{ 'amt-out' if t.transaction_type=='payment' else 'amt-in' }}">
+                    {{ 'برد (پرداخت)' if t.transaction_type=='payment' else 'رسید (دریافت)' }}
+                </td>
+                <td class="{{ 'amt-out' if t.transaction_type=='payment' else 'amt-in' }}">{{ '{:,.0f}'.format(t.amount) }}</td>
+                <td>{{ t.currency.code if t.currency else '-' }}</td>
+                <td>{{ t.bank.name if t.bank else '-' }}</td>
+                <td class="desc-cell">{{ t.notes or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="padding:20px; color:#999;">هیچ برد و رسیدی برای کارمندان ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

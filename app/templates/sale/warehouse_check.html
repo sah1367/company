@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>چک گدام #{{ inv.invoice_no }}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { background:#f0f0f0; padding:20px; }
+    .doc {
+        max-width:380px; margin:0 auto; background:#fff; border-radius:10px;
+        overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .doc-header {
+        background:#1b5e20; color:#fff; text-align:center; padding:14px 16px;
+        font-size:13px; font-weight:bold; line-height:1.6;
+    }
+    .doc-logo {
+        text-align:center; padding:12px; background:#fff;
+    }
+    .doc-logo img { width:60px; height:60px; }
+
+    .title-box {
+        text-align:center; margin:0 20px 14px 20px;
+        border:1px solid #1b5e20; border-radius:20px; padding:8px;
+        font-size:15px; font-weight:bold; color:#1b5e20;
+    }
+
+    .meta-box {
+        margin:0 16px 14px 16px; border:1px solid #ddd; border-radius:6px; padding:10px 14px;
+        font-size:12px; line-height:1.9;
+    }
+    .meta-box .row { display:flex; justify-content:space-between; }
+    .meta-box .label { color:#444; }
+    .meta-box .value { font-weight:bold; color:#1565c0; }
+
+    .items-head {
+        background:#1b5e20; color:#fff; display:flex; justify-content:space-between;
+        padding:8px 16px; font-size:13px; font-weight:bold; margin:0 16px;
+        border-radius:4px 4px 0 0;
+    }
+    .items-body { margin:0 16px; border:1px solid #ddd; border-top:none; border-radius:0 0 4px 4px; }
+    .item-row {
+        display:flex; padding:8px 14px; font-size:12px; border-bottom:1px dashed #ccc;
+    }
+    .item-row .num { width:24px; color:#1b5e20; font-weight:bold; }
+    .empty-row { padding:8px 14px; border-bottom:1px dashed #ccc; height:18px; }
+
+    .confirm-box {
+        margin:14px 16px; background:#e8f5e9; border-radius:6px; padding:10px 14px;
+        font-size:12px; text-align:center; color:#1b5e20; font-weight:bold;
+    }
+
+    .sign-row {
+        display:flex; justify-content:space-between; margin:18px 16px 6px 16px;
+        font-size:12px; font-weight:bold; color:#333;
+    }
+
+    .footer {
+        margin:14px 16px 0 16px; font-size:11px; color:#555; line-height:1.8;
+    }
+    .footer .phones { color:#1b5e20; font-weight:bold; }
+
+    .expiry-note {
+        background:#1b5e20; color:#fff; text-align:center; padding:8px; font-size:11px; margin-top:14px;
+    }
+
+    @media print {
+        body { background:#fff; padding:0; }
+        .no-print { display:none; }
+        .doc { box-shadow:none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="no-print" style="text-align:center; margin-bottom:14px;">
+    <button onclick="window.print()" style="padding:8px 20px; background:#1b5e20; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px;">چاپ سند</button>
+</div>
+
+<div class="doc">
+
+    <div class="doc-header">
+        {{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}
+    </div>
+
+    <div class="doc-logo">
+        <div style="width:60px;height:60px;border-radius:50%;background:#1b5e20;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:20px;font-weight:bold;">ط</div>
+    </div>
+
+    <div class="title-box">چک گدام تولیدی</div>
+
+    <div class="meta-box">
+        <div class="row"><span class="label">تاریخ:</span><span class="value">{{ inv.j_year }}-{{ '%02d'|format(inv.j_month) }}-{{ '%02d'|format(inv.j_day) }}</span></div>
+        <div class="row"><span class="label">شماره:</span><span class="value">{{ inv.invoice_no }}</span></div>
+        <div class="row"><span class="label">محترم گدامدار:</span><span class="value">0</span></div>
+        <div class="row"><span class="label">برای محترم:</span><span class="value">{{ inv.customer.name if inv.customer else '-' }}</span></div>
+    </div>
+
+    <div class="items-head">
+        <span>شرح اجناس</span>
+        <span>#</span>
+    </div>
+    <div class="items-body">
+        {% for line in inv.lines %}
+        {% set count_num = (line.count_desc|float) if line.count_desc else none %}
+        {% set line_total_weight = (line.amount or 0) * count_num if count_num else (line.amount or 0) %}
+        <div class="item-row">
+            <span class="num">{{ loop.index }}</span>
+            <span>{{ line.item_name }}{% if line.count_desc %} تعداد {{ line.count_desc }} عدد،{% endif %} وزن {{ '%g'|format(line_total_weight) }} {{ line.unit.quantity if line.unit else 'کیلو' }}</span>
+        </div>
+        {% endfor %}
+        {% for i in range(item_count, item_count + 3) %}
+        <div class="empty-row"></div>
+        {% endfor %}
+    </div>
+
+    <div class="confirm-box">
+        جمله به تعداد {{ item_count }} قلم صحت دارد.
+    </div>
+
+    <div class="sign-row">
+        <span>امضاء مسئول</span>
+        <span>مهر گدام</span>
+    </div>
+    <div class="footer" style="text-align:center; font-size:10px; color:#999; margin-top:-4px; margin-bottom:8px;">
+        بدون مهر و امضاء این سند اعتبار ندارد.
+    </div>
+
+    <div class="footer">
+        آدرس: شهرک<br>
+        <span class="phones">📞 0729294418</span><br>
+        <span class="phones">📞 0729609609</span>
+    </div>
+
+    <div class="expiry-note">
+        مدت اعتبار این سند سه روز می‌باشد
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}میزان فروشات از یک جنس{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:16px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:130px; text-align:right; }
+    .date-group { display:flex; gap:6px; width:280px; }
+    .date-group select { flex:1; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .field-row select.single { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+
+    .btn-row { display:flex; justify-content:center; gap:10px; margin-top:8px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .btn-clear { background:#90a4ae; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; text-decoration:none; display:inline-block; }
+    .btn-print { background:#2e7d32; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+
+    /* ===== سند راپور قابل چاپ ===== */
+    .report-doc { max-width:1100px; margin:0 auto; border:1px solid #cfe0ee; background:#fff; }
+
+    .report-header { display:flex; align-items:center; border-bottom:2px solid #1e88e5; }
+    .report-header .box { flex:1; padding:12px 16px; font-size:12px; color:#333; }
+    .report-header .box.dates { text-align:right; }
+    .report-header .box.title { text-align:center; font-size:14px; font-weight:bold; color:#1b1b1b; border-right:1px solid #dbe7f2; border-left:1px solid #dbe7f2; }
+    .report-header .box.brand { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+    .report-header .brand-text { text-align:right; }
+    .report-header .brand-text .fa { font-size:11px; color:#333; }
+    .report-header .brand-text .en { font-size:11px; color:#2e7d32; font-weight:bold; }
+    .report-header .logo-badge {
+        width:44px; height:44px; border-radius:50%; background:#2e7d32; color:#fff;
+        display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:15px; flex-shrink:0;
+    }
+
+    table.report-table { width:100%; border-collapse:collapse; }
+    table.report-table th {
+        background:#eef4fb; color:#1565c0; font-size:12px; font-weight:bold; padding:8px 10px;
+        text-align:center; border-bottom:2px solid #cfe0ee; border-left:1px solid #e3edf6;
+    }
+    table.report-table td {
+        font-size:12px; padding:7px 10px; text-align:center; border-bottom:1px solid #eef2f5; border-left:1px solid #f2f6fa;
+    }
+    table.report-table td.buyer { text-align:right; }
+    table.report-table td.total { color:#c62828; font-weight:bold; }
+    table.report-table tbody tr:nth-child(even) { background:#fafcfe; }
+
+    .report-footer { display:flex; border-top:2px solid #1e88e5; }
+    .report-footer .cell { flex:1; padding:12px 14px; font-size:13px; font-weight:bold; text-align:center; }
+    .report-footer .cell.label { color:#333; }
+    .report-footer .cell.qty { color:#1565c0; }
+    .report-footer .cell.total { color:#c62828; }
+
+    @media print {
+        #top, #navigation, .no-print { display:none !important; }
+        .panel { display:none !important; }
+        body { background:#fff; }
+    }
+</style>
+
+<div class="panel no-print">
+    <div class="panel-head">
+        <span>میزان فروشات از یک جنس</span>
+        <a href="{{ back_url }}">◀ بازگشت به راپور مشتریان</a>
+    </div>
+    <div class="panel-body">
+        <form method="get">
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="to_year">
+                        {% for y in range(today.year-3, today.year+2) %}
+                        <option value="{{ y }}" {% if to_year == y %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="to_month">
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if to_month == m %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="to_day">
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if to_day == d %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ امروز</label>
+            </div>
+
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="from_year">
+                        {% for y in range(today.year-3, today.year+2) %}
+                        <option value="{{ y }}" {% if from_year == y %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="from_month">
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if from_month == m %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="from_day">
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if from_day == d %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ روز های قبل</label>
+            </div>
+
+            <div class="field-row">
+                <select name="item_id" class="single">
+                    <option value="">همه اجناس</option>
+                    {% for it in item_list %}
+                    <option value="{{ it.id }}" {% if selected_item_id == it.id %}selected{% endif %}>{{ it.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>نام جنس</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.sales_by_item_report') }}" class="btn-clear">پاک کردن</a>
+                <button type="submit" name="searched" value="1" class="btn-blue">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+    {% if rows %}
+    <div class="no-print" style="text-align:center; margin-bottom:14px;">
+        <button onclick="window.print()" class="btn-print">چاپ راپور</button>
+    </div>
+
+    <div class="report-doc">
+        <div class="report-header">
+            <div class="box dates">
+                از تاریخ {{ from_year }}-{{ '%02d'|format(from_month) }}-{{ '%02d'|format(from_day) }}
+                تا تاریخ {{ to_year }}-{{ '%02d'|format(to_month) }}-{{ '%02d'|format(to_day) }}
+            </div>
+            <div class="box title">لیست کالای فروخته شده{% if selected_item %} — {{ selected_item.name }}{% endif %}</div>
+            <div class="box brand">
+                <div class="brand-text">
+                    <div class="en">Tanin-eh-Herat Food Product Co.</div>
+                    <div class="fa">راپور فروشات کالا</div>
+                </div>
+                <div class="logo-badge">{% if company and company.logo_filename %}<img src="{{ url_for('static', filename=company.logo_filename) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}TH{% endif %}</div>
+            </div>
+        </div>
+
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width:45px;">شماره</th>
+                    <th style="width:80px;">شماره فاکتور</th>
+                    <th>جنس</th>
+                    <th style="width:90px;">تاریخ فروش</th>
+                    <th>خریدار</th>
+                    <th style="width:80px;">قیمت</th>
+                    <th style="width:80px;">مقدار</th>
+                    <th style="width:100px;">مجموع</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ r.invoice_no }}</td>
+                    <td>{{ r.item_name }}</td>
+                    <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                    <td class="buyer">{{ r.customer }}</td>
+                    <td>{{ '{:,.0f}'.format(r.price or 0) }}</td>
+                    <td>{{ '{:,.2f}'.format(r.qty or 0) }}</td>
+                    <td class="total">{{ '{:,.0f}'.format(r.total or 0) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="report-footer">
+            <div class="cell total">{{ '{:,.0f}'.format(total_amount) }}</div>
+            <div class="cell qty">{{ '{:,.2f}'.format(total_qty) }}</div>
+            <div class="cell label">مجموع مقداری / مجموعه</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="panel">
+        <div class="panel-body" style="text-align:center; color:#999;">هیچ فروشی در این بازه یافت نشد</div>
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

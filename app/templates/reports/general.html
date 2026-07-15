@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}گزارش‌های عمومی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:40px 20px; display:flex; justify-content:center; }
+
+    .report-card { width:600px; max-width:100%; border:1px solid #dbe7f2; border-radius:4px; background:#f5f9fd; padding:18px; }
+    .report-head {
+        background:#1565c0; color:#fff; text-align:center; font-size:16px; font-weight:bold;
+        padding:12px; border-radius:4px; margin-bottom:22px;
+    }
+    .report-btn {
+        display:block; text-align:center; background:#1976d2; color:#fff; text-decoration:none;
+        padding:11px 6px; border-radius:20px; font-size:13px; font-weight:bold;
+        box-shadow:0 1px 3px rgba(0,0,0,0.2);
+    }
+    .report-btn:hover { background:#0d47a1; }
+
+    .report-row-single { max-width:260px; margin:0 0 14px auto; }
+    .report-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>گزارشهای عمومی</span>
+        <a href="{{ url_for('main.reports') }}">◀ بازگشت به گزارش‌ها</a>
+    </div>
+    <div class="panel-body">
+        <div class="report-card">
+            <div class="report-head">راپورهای عمومی</div>
+
+            <div class="report-row-single">
+                <a href="{{ url_for('main.report_page', slug='profit_loss_detail') }}" class="report-btn">
+                    {{ general_pages['profit_loss_detail'] }}
+                </a>
+            </div>
+
+            <div class="report-grid">
+                <a href="{{ url_for('main.report_page', slug='balance') }}" class="report-btn">
+                    {{ general_pages['balance'] }}
+                </a>
+                <a href="{{ url_for('main.report_page', slug='cash_capital') }}" class="report-btn">
+                    {{ general_pages['cash_capital'] }}
+                </a>
+                <a href="{{ url_for('main.currency_rate') }}" class="report-btn">
+                    نرخ اسعار
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

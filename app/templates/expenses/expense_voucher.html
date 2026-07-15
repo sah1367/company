@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>سند پرداخت مصارف</title>
+<style>
+body{
+    font-family:Tahoma;
+    background:#f5f5f5;
+}
+.voucher{
+    width:900px;
+    margin:20px auto;
+    background:#fff;
+    border:2px solid #000;
+    padding:20px;
+}
+.header{
+    text-align:center;
+    border-bottom:2px solid #000;
+    padding-bottom:10px;
+    margin-bottom:20px;
+}
+.header h2{
+    margin:0;
+}
+.info{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:20px;
+}
+.info td{
+    border:1px solid #999;
+    padding:8px;
+}
+.detail{
+    width:100%;
+    border-collapse:collapse;
+}
+.detail th,
+.detail td{
+    border:1px solid #000;
+    padding:10px;
+    text-align:center;
+}
+.detail th{
+    background:#e6e6e6;
+}
+.notes{
+    border:1px solid #000;
+    margin-top:20px;
+    padding:10px;
+    min-height:70px;
+}
+.sign{
+    width:100%;
+    margin-top:50px;
+    border-collapse:collapse;
+}
+.sign td{
+    width:25%;
+    text-align:center;
+    padding-top:40px;
+}
+.print-btn{
+    text-align:center;
+    margin:20px;
+}
+.print-btn button{
+    padding:10px 30px;
+    background:#1e88e5;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    border-radius:4px;
+}
+@page{
+    size:A5 portrait;
+    margin:8mm;
+}
+
+.print-btn{
+display:none;
+}
+
+body{
+    margin:0;
+    padding:0;
+    background:#ddd;
+    font-family:Tahoma;
+}
+
+.voucher{
+    width:120mm;
+    min-height:180mm;
+    margin:auto;
+    background:white;
+    box-shadow:0 0 10px #999;
+}
+</style>
+
+<div class="print-btn">
+<button onclick="window.print()">🖨 چاپ سند</button>
+</div>
+
+<div class="voucher">
+
+<div class="header">
+<h2>شرکت شما</h2>
+<h3>سند پرداخت مصارف</h3>
+</div>
+
+<table class="info">
+
+<tr>
+<td><b>شماره سند</b></td>
+<td>{{ expense.id }}</td>
+
+<td><b>تاریخ</b></td>
+<td>{{ expense.j_year }}/{{'%02d'|format(expense.j_month)}}/{{'%02d'|format(expense.j_day)}}</td>
+</tr>
+
+<tr>
+
+<td><b>گیرنده</b></td>
+<td>{{ expense.recipient }}</td>
+
+<td><b>بانک</b></td>
+<td>
+{% if expense.bank %}
+{{ expense.bank.name }}
+{% else %}
+-
+{% endif %}
+</td>
+
+</tr>
+
+<tr>
+
+<td><b>واحد پول</b></td>
+
+<td>
+{% if expense.currency %}
+{{ expense.currency.code }}
+{% endif %}
+</td>
+
+<td><b>نرخ</b></td>
+<td>{{ expense.rate }}</td>
+
+</tr>
+
+</table>
+
+<table class="detail">
+
+<tr>
+
+<th>کتگوری مصرف</th>
+
+<th>مبلغ</th>
+
+<th>مجموع دلار</th>
+
+</tr>
+
+<tr>
+
+<td>
+{% if expense.category %}
+{{ expense.category.name }}
+{% endif %}
+</td>
+
+<td>
+{{'{:,.2f}'.format(expense.amount)}}
+</td>
+
+<td>
+{{'%.2f'|format(expense.total_usd)}}
+</td>
+
+</tr>
+
+</table>
+
+<div class="notes">
+
+<b>توضیحات :</b>
+
+<br><br>
+
+{{ expense.notes }}
+
+</div>
+
+<table class="sign">
+
+<tr>
+
+<td>تهیه کننده</td>
+
+<td>بررسی کننده</td>
+
+<td>تأیید کننده</td>
+
+<td>دریافت کننده</td>
+
+</tr>
+
+<tr>
+
+<td>......................</td>
+
+<td>......................</td>
+
+<td>......................</td>
+
+<td>......................</td>
+
+</tr>
+
+</table>
+
+</div>
+
+</body>
+</html>

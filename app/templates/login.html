@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>ورود به سیستم</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    html, body {
+        height:100%;
+        background:#1565c0;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .login-card {
+        background:#fff;
+        width:420px;
+        max-width:92vw;
+        border-radius:14px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.25);
+        padding:36px 40px 40px;
+        text-align:center;
+    }
+    .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:6px; }
+    .logo-name { font-weight:bold; font-size:19px; color:#1a237e; letter-spacing:1px; margin-top:6px; }
+    .logo-tagline { font-size:10px; color:#333; font-style:italic; margin-top:2px; letter-spacing:0.5px; }
+
+    .page-title { font-size:19px; font-weight:bold; color:#222; margin:22px 0 20px; }
+
+    .field { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+    .field label { width:80px; font-size:14px; font-weight:bold; color:#222; text-align:right; white-space:nowrap; }
+    .field input {
+        flex:1; padding:9px 12px; border:1px solid #bbb; border-radius:4px; font-size:13px;
+    }
+    .field input:focus { outline:none; border-color:#1e88e5; }
+
+    .btn-login {
+        margin-top:12px;
+        background:#1e88e5; color:#fff; border:none;
+        padding:9px 34px; border-radius:20px; font-size:13px; font-weight:bold;
+        cursor:pointer;
+    }
+    .btn-login:hover { background:#1565c0; }
+
+    .flash-box {
+        margin:0 0 14px; padding:9px 12px; border-radius:4px; font-size:12px;
+        background:#f8d7da; color:#721c24; border-right:4px solid #dc3545; text-align:center;
+    }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+
+    <div class="logo-wrap">
+        <svg width="90" height="80" viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50,4 66,10 78,22 60,26" fill="#e53935"/>
+            <polygon points="66,10 78,22 84,36 68,34" fill="#fb8c00"/>
+            <polygon points="50,4 60,26 40,26" fill="#fdd835"/>
+            <polygon points="34,10 50,4 40,26 22,22" fill="#8e24aa"/>
+            <polygon points="22,22 40,26 36,42 16,36" fill="#3949ab"/>
+            <polygon points="40,26 60,26 58,44 38,44" fill="#43a047"/>
+            <polygon points="60,26 68,34 66,46 58,44" fill="#00acc1"/>
+            <polygon points="68,34 84,36 78,52 66,46" fill="#1e88e5"/>
+            <polygon points="16,36 36,42 34,56 14,52" fill="#7cb342"/>
+            <polygon points="36,42 38,44 40,58 22,58 34,56" fill="#c0ca33"/>
+            <polygon points="38,44 58,44 56,60 40,58" fill="#00897b"/>
+            <polygon points="58,44 66,46 62,62 56,60" fill="#26a69a"/>
+            <polygon points="66,46 78,52 70,66 62,62" fill="#5e35b1"/>
+            <polygon points="14,52 34,56 30,68 18,64" fill="#fdd835"/>
+            <polygon points="34,56 40,58 42,70 30,68" fill="#e53935"/>
+            <polygon points="40,58 56,60 50,74 42,70" fill="#fb8c00"/>
+            <polygon points="56,60 62,62 58,76 50,74" fill="#8e24aa"/>
+            <polygon points="62,62 70,66 62,78 58,76" fill="#3949ab"/>
+        </svg>
+        <div class="logo-name">HEKTA SOFT</div>
+        <div class="logo-tagline">Be fast and reliable!</div>
+    </div>
+
+    <div class="page-title">صفحه ورودی</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-box">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="post">
+        <div class="field">
+            <label>نام کاربری</label>
+            <input type="text" name="username" autocomplete="username" required autofocus>
+        </div>
+        <div class="field">
+            <label>پسورد</label>
+            <input type="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-login">ورود به سیستم</button>
+    </form>
+
+</div>
+
+</body>
+</html>

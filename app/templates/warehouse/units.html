@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}واحد اندازه‌گیری{% endblock %}
+{% block content %}
+<div class="container-fluid">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>واحد اندازه‌گیری</h4>
+    <a href="{{ url_for('main.unit_add') }}" class="btn btn-success">+ واحد جدید</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:80px">#</th>
+            <th>نام واحد</th>
+            <th style="width:160px">عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in units %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ u.quantity }}</td>
+            <td>
+              <a href="{{ url_for('main.unit_edit', id=u.id) }}" class="btn btn-sm btn-outline-primary">ویرایش</a>
+              <a href="{{ url_for('main.unit_delete', id=u.id) }}" class="btn btn-sm btn-outline-danger"
+                 onclick="return confirm('حذف شود؟')">حذف</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-center py-4 text-muted">هیچ واحدی ثبت نشده</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

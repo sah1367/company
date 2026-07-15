@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}استتمنت بانکی{% endblock %}
+{% block content %}
+<style>
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+
+    .stmt-wrap { max-width:1100px; margin:0 auto; background:#fff; border:1px solid #ddd; border-radius:6px; overflow:hidden; }
+
+    .stmt-head { display:flex; align-items:center; gap:16px; padding:16px 20px; border-bottom:2px solid #333; }
+    .stmt-head .logo-box {
+        width:60px; height:60px; border-radius:6px; background:#37474f; color:#fff;
+        display:flex; align-items:center; justify-content:center; font-size:11px; text-align:center; flex-shrink:0;
+    }
+    .stmt-head .titles { flex:1; text-align:center; }
+    .stmt-head .company-title { font-size:17px; font-weight:bold; margin-bottom:4px; }
+    .stmt-head .stmt-sub { font-size:14px; color:#333; margin-bottom:2px; }
+    .stmt-head .stmt-date { font-size:12px; color:#666; }
+
+    .filter-bar { padding:10px 20px; background:#f5f5f5; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    .filter-bar select { padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .filter-bar .btn-blue { background:#1e88e5; color:#fff; border:none; padding:7px 20px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .filter-bar .btn-print { background:#455a64; color:#fff; border:none; padding:7px 20px; border-radius:4px; cursor:pointer; font-size:13px; }
+
+    table.ledger-table { width:100%; border-collapse:collapse; }
+    table.ledger-table th {
+        background:#78909c; color:#fff; font-size:12px; font-weight:bold; padding:9px 8px;
+        text-align:center; white-space:nowrap; border:1px solid #607d8b;
+    }
+    table.ledger-table td {
+        padding:8px; font-size:12.5px; border:1px solid #e0e0e0; text-align:center; white-space:nowrap;
+    }
+    table.ledger-table td.desc-cell, table.ledger-table td.name-cell { text-align:right; white-space:normal; }
+    table.ledger-table tbody tr:nth-child(even) { background:#f7f9fa; }
+    table.ledger-table tbody tr:hover { background:#e3f2fd; }
+
+    .amt-credit { color:#2e7d32; font-weight:bold; }
+    .amt-debit { color:#c62828; font-weight:bold; }
+    .amt-balance { font-weight:bold; color:#0d47a1; }
+
+    .stmt-footer { display:flex; gap:14px; padding:18px 20px; flex-wrap:wrap; }
+    .stmt-footer .box { flex:1; min-width:180px; border-radius:6px; padding:14px; text-align:center; color:#fff; }
+    .stmt-footer .box .box-label { font-size:12px; margin-bottom:6px; opacity:.9; }
+    .stmt-footer .box .box-value { font-size:18px; font-weight:bold; }
+    .box-debit { background:#e53935; }
+    .box-credit { background:#43a047; }
+    .box-balance { background:#1565c0; }
+
+    @media print {
+        .no-print { display:none; }
+        .filter-bar { display:none; }
+    }
+
+    @media(max-width:700px){
+        table.ledger-table th, table.ledger-table td { font-size:11px; padding:5px; }
+        .stmt-footer { flex-direction:column; }
+    }
+</style>
+
+<a href="{{ url_for('main.bank_account', bank_id=bank.id) }}" class="back-link no-print">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="stmt-wrap">
+
+    <div class="stmt-head">
+        <div class="logo-box">لوگو</div>
+        <div class="titles">
+            <div class="company-title">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+            <div class="stmt-sub">حسابات بانکی — {{ bank.name }}</div>
+            {% if currency_filter %}<div class="stmt-date">واحد پولی: {{ currency_filter }}</div>{% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="filter-bar no-print">
+        <label style="font-size:12px;">واحد پولی:</label>
+        <select name="currency" onchange="this.form.submit()">
+            {% for c in available_currencies %}
+            <option value="{{ c }}" {% if currency_filter == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-blue">سرچ</button>
+        <button type="button" class="btn-print" onclick="window.print()">چاپ</button>
+    </form>
+
+    <table class="ledger-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>تاریخ</th>
+                <th>مرجع</th>
+                <th>نام</th>
+                <th>توضیحات</th>
+                <th>رسیده‌گی</th>
+                <th>برده‌گی</th>
+                <th>حساب کنونی</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ e.number }}</td>
+                <td>{{ e.j_year }}-{{ '%02d'|format(e.j_month) }}-{{ '%02d'|format(e.j_day) }}</td>
+                <td>{{ e.ref }}</td>
+                <td class="name-cell">{{ e.name }}</td>
+                <td class="desc-cell">{{ e.desc }}</td>
+                <td class="amt-credit">{{ '{:,.0f}'.format(e.credit) if e.credit else '0' }}</td>
+                <td class="amt-debit">{{ '{:,.0f}'.format(e.debit) if e.debit else '0' }}</td>
+                <td class="amt-balance">{{ '{:,.2f}'.format(e.balance) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:24px; color:#999;">هیچ تراکنشی برای این واحد پولی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="stmt-footer">
+        <div class="box box-debit">
+            <div class="box-label">مجموع برده‌گی (پرداختی)</div>
+            <div class="box-value">{{ '{:,.0f}'.format(total_debit) }}</div>
+        </div>
+        <div class="box box-credit">
+            <div class="box-label">مجموع رسیده‌گی (دریافتی)</div>
+            <div class="box-value">{{ '{:,.0f}'.format(total_credit) }}</div>
+        </div>
+        <div class="box box-balance">
+            <div class="box-label">مانده نهایی حساب ({{ currency_filter }})</div>
+            <div class="box-value">{{ '{:,.2f}'.format(final_balance) }}</div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}حسابات فروشنده{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:12px 16px; }
+    .panel-body { padding:35px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:20px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; }
+    .field-row input { width:320px; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:10px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 26px; border-radius:20px; cursor:pointer; font-size:13px; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">حسابات فروشنده</div>
+    <div class="panel-body">
+        <form method="get" action="{{ url_for('main.vendor_account', vendor_id=0) }}" id="searchForm" onsubmit="return goToVendor(event)">
+            <div class="field-row">
+                <input type="text" id="vendorNameInput" list="vendorNamesList" autocomplete="off" placeholder="">
+                <datalist id="vendorNamesList">
+                    {% for v in vendor_list %}
+                    <option value="{{ v.name }}" data-id="{{ v.id }}">
+                    {% endfor %}
+                </datalist>
+                <label>نام فروشنده کالا</label>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn-blue" onclick="goToDetails()">جزئیات</button>
+                <button type="button" class="btn-blue" onclick="goToDetails()">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+var vendorMap = {};
+{% for v in vendor_list %}
+vendorMap["{{ v.name }}"] = {{ v.id }};
+{% endfor %}
+
+function goToDetails() {
+    var name = document.getElementById('vendorNameInput').value.trim();
+    var id = vendorMap[name];
+    if (!id) {
+        alert('لطفاً یک فروشنده معتبر از لیست انتخاب کنید.');
+        return;
+    }
+    window.location.href = '/purchase/vendor-account/' + id;
+}
+</script>
+{% endblock %}

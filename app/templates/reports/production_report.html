@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}راپور تولیدی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head {
+        background:#1e88e5; color:#fff; font-size:15px; font-weight:bold;
+        padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .panel-head a { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,0.2); padding:5px 14px; border-radius:14px; }
+    .panel-body { padding:40px 20px; background:#fff; }
+
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:22px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:120px; text-align:right; }
+    .field-row select.single { width:340px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+
+    .btn-row { display:flex; justify-content:center; gap:10px; margin-top:8px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 34px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .btn-clear { background:#90a4ae; color:#fff; border:none; padding:8px 34px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; text-decoration:none; display:inline-block; }
+    .btn-print { background:#2e7d32; color:#fff; border:none; padding:8px 30px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:bold; }
+
+    /* ===== سند راپور قابل چاپ ===== */
+    .report-doc { max-width:1000px; margin:0 auto; border:2px solid #2e7d47; border-radius:4px; overflow:hidden; }
+
+    .report-title { display:flex; justify-content:space-between; align-items:center; padding:16px 24px; border-bottom:2px solid #2e7d47; }
+    .report-title h1 { font-size:17px; font-weight:bold; color:#1b1b1b; }
+    .company-block { display:flex; align-items:center; gap:10px; text-align:left; }
+    .company-block .logo-badge {
+        width:46px; height:46px; border-radius:6px; background:#2e7d47; color:#fff;
+        display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px; flex-shrink:0;
+    }
+    .company-block .cname { font-weight:bold; font-size:12.5px; color:#2e7d47; max-width:320px; }
+
+    .section-bar { background:#2e7d47; color:#fff; font-weight:bold; font-size:13px; padding:8px 22px; }
+
+    table.spec-table { width:100%; border-collapse:collapse; font-size:13px; }
+    table.spec-table td { padding:11px 22px; border-bottom:1px solid #e5ebe7; }
+    table.spec-table td.lbl { color:#5a6a63; font-weight:bold; width:18%; }
+    table.spec-table td.val { font-weight:bold; width:32%; }
+
+    table.mat-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    table.mat-table th { background:#eef3f0; color:#2e7d47; font-weight:bold; padding:9px 10px; border-bottom:1px solid #d7e2db; text-align:center; }
+    table.mat-table td { padding:8px 10px; border-bottom:1px solid #eef1ef; text-align:center; }
+    table.mat-table tr:nth-child(even) td { background:#fafcfb; }
+    table.mat-table td.name-col { text-align:right; }
+    .totals-row td { font-weight:bold; background:#f2f7f3 !important; color:#2e7d47; }
+
+    @media print {
+        #top, #navigation, .no-print { display:none !important; }
+        .panel { display:none !important; }
+        body { background:#fff; }
+    }
+</style>
+
+<div class="panel no-print">
+    <div class="panel-head">
+        <span>جستجو بر اساس خط تولید</span>
+        <a href="{{ back_url }}">◀ بازگشت به گزارش‌های گدام</a>
+    </div>
+    <div class="panel-body">
+        <form method="get">
+            <div class="field-row">
+                <select name="production_id" class="single">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for p in production_list %}
+                    <option value="{{ p.id }}" {% if production_id == p.id %}selected{% endif %}>
+                        {{ p.production_line or '-' }} ({{ p.j_year }}-{{ '%02d'|format(p.j_month) }}-{{ '%02d'|format(p.j_day) }}) {{ p.item_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <label>انتخاب خط تولید</label>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.production_report') }}" class="btn-clear">پاک کردن</a>
+                <button type="submit" name="searched" value="1" class="btn-blue">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+    {% if selected %}
+    <div class="no-print" style="text-align:center; margin-bottom:14px;">
+        <button onclick="window.print()" class="btn-print">چاپ راپور</button>
+    </div>
+
+    <div class="report-doc">
+        <div class="report-title">
+            <h1>گزارش خط تولید</h1>
+            <div class="company-block">
+                <div>
+                    <div class="cname">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+                </div>
+                <div class="logo-badge">{% if company and company.logo_filename %}<img src="{{ url_for('static', filename=company.logo_filename) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}TH{% endif %}</div>
+            </div>
+        </div>
+
+        <div class="section-bar">مشخصات تولید</div>
+        <table class="spec-table">
+            <tr>
+                <td class="lbl">نام محصول:</td><td class="val">{{ selected.item_name }}</td>
+                <td class="lbl">خط تولید:</td><td class="val">{{ selected.production_line or '-' }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">تاریخ تولید:</td>
+                <td class="val">{{ selected.j_year }}-{{ '%02d'|format(selected.j_month) }}-{{ '%02d'|format(selected.j_day) }}</td>
+                <td class="lbl">واحد:</td><td class="val">{{ selected.unit.quantity if selected.unit else '-' }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">مقدار تولید:</td><td class="val">{{ '{:,.2f}'.format(selected.amount or 0) }}</td>
+                <td class="lbl">گدام:</td><td class="val">{{ selected.stock.name if selected.stock else '-' }}</td>
+            </tr>
+        </table>
+
+        <div class="section-bar">مواد مصرف‌شده</div>
+        <table class="mat-table">
+            <tr>
+                <th>شماره</th><th>نام کالا</th><th>تاریخ</th><th>گدام</th><th>واحد</th><th>مقدار</th><th>قیمت</th><th>مجموع</th>
+            </tr>
+            {% for l in lines %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="name-col">{{ l.item_name }}</td>
+                <td>{{ selected.j_year }}-{{ '%02d'|format(selected.j_month) }}-{{ '%02d'|format(selected.j_day) }}</td>
+                <td>{{ l.stock.name if l.stock else '-' }}</td>
+                <td>{{ l.unit.quantity if l.unit else '-' }}</td>
+                <td>{{ '{:,.2f}'.format(l.amount or 0) }}</td>
+                <td>{{ '{:,.2f}'.format(l.price or 0) }}</td>
+                <td>{{ '{:,.2f}'.format(l.total or 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:16px; color:#999;">هیچ ماده مصرفی برای این تولید ثبت نشده</td></tr>
+            {% endfor %}
+            <tr class="totals-row">
+                <td colspan="7">مجموع کل قیمت مواد</td>
+                <td>{{ '{:,.2f}'.format(selected.total_price or 0) }}</td>
+            </tr>
+        </table>
+    </div>
+    {% else %}
+    <div class="panel">
+        <div class="panel-body" style="text-align:center; color:#999;">لطفاً یک خط تولید را انتخاب کنید</div>
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

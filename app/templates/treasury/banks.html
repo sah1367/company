@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}ثبت بانک{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; display:flex; justify-content:space-between; }
+    .panel-body { padding:25px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:120px; }
+    .field-row input, .field-row select { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:6px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .status-active { color:#2e7d32; font-weight:bold; text-decoration:none; }
+    .status-inactive { color:#c62828; font-weight:bold; text-decoration:none; }
+</style>
+
+<div class="panel">
+    <div class="panel-head">ثبت بانک</div>
+    <div class="panel-body">
+        <form method="post">
+            {% if edit_b %}
+            <input type="hidden" name="b_id" value="{{ edit_b.id }}">
+            {% endif %}
+            <div class="field-row">
+                <input type="text" name="name" required value="{{ edit_b.name if edit_b else '' }}">
+                <label>نام بانک</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="account_no" value="{{ edit_b.account_no if edit_b else '' }}">
+                <label>شماره حساب</label>
+            </div>
+            <div class="field-row">
+                <input type="text" name="branch" value="{{ edit_b.branch if edit_b else '' }}">
+                <label>شعبه</label>
+            </div>
+            <div class="field-row">
+                <select name="currency_id">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for c in active_currencies %}
+                    <option value="{{ c.id }}" {% if edit_b and edit_b.currency_id == c.id %}selected{% endif %}>{{ c.code }} — {{ c.country_name }}</option>
+                    {% endfor %}
+                </select>
+                <label>واحدپولی</label>
+            </div>
+            <div class="btn-row">
+                <a href="{{ url_for('main.banks') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="جستجوی بانک"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th style="width:60px">شماره</th>
+                <th>نام بانک</th>
+                <th>شماره حساب</th>
+                <th>شعبه</th>
+                <th>واحدپولی</th>
+                <th style="width:90px">حالت</th>
+                <th style="width:140px">عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="bankTableBody">
+            {% for b in bank_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="bank-name">{{ b.name }}</td>
+                <td>{{ b.account_no or '0' }}</td>
+                <td>{{ b.branch or '-' }}</td>
+                <td>{{ b.currency.code if b.currency else '-' }}</td>
+                <td>
+                    <a href="{{ url_for('main.bank_toggle', id=b.id) }}"
+                       class="{{ 'status-active' if b.is_active else 'status-inactive' }}">
+                        {{ 'فعال' if b.is_active else 'غیر فعال' }}
+                    </a>
+                </td>
+                <td>
+                    <a href="{{ url_for('main.banks', edit=b.id) }}" class="act-link">✏ ویرایش</a>
+                    <a href="{{ url_for('main.bank_delete', id=b.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑 حذف</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#999;">هیچ بانکی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#bankTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.bank-name');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

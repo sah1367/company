@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}ارزش مقداری گدام{% endblock %}
+{% block content %}
+<style>
+    .sv-back { margin-bottom:10px; }
+    .sv-back a { color:#1e88e5; text-decoration:none; font-size:12px; }
+
+    .sv-doc { max-width:1150px; margin:0 auto; background:#fff; border:1px solid #d7e2db; border-radius:6px; overflow:hidden; }
+
+    .sv-head { display:flex; justify-content:space-between; align-items:flex-start; padding:20px 26px 14px; }
+    .sv-head .titles .cname { font-size:19px; font-weight:bold; color:#1f7a3d; margin-bottom:4px; }
+    .sv-head .titles .subtitle { font-size:13px; color:#7a8a80; }
+    .sv-head .meta { text-align:left; font-size:12.5px; color:#333; }
+    .sv-head .meta .row { margin-bottom:4px; }
+    .sv-head .meta .row b { color:#1f7a3d; }
+
+    .sv-toolbar { display:flex; justify-content:space-between; align-items:center; padding:0 26px 18px; gap:14px; flex-wrap:wrap; }
+    .sv-search { position:relative; flex:1; min-width:220px; max-width:340px; }
+    .sv-search input { width:100%; padding:9px 14px 9px 34px; border:1px solid #d7e2db; border-radius:20px; font-size:13px; font-family:inherit; }
+    .sv-search .ic { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#9aa9a1; font-size:13px; }
+
+    .sv-actions { display:flex; gap:10px; }
+    .btn-pdf { background:#c8960c; color:#fff; border:none; padding:9px 20px; border-radius:20px; cursor:pointer; font-size:12.5px; font-weight:bold; }
+    .btn-printpdf { background:#1f7a3d; color:#fff; border:none; padding:9px 20px; border-radius:20px; cursor:pointer; font-size:12.5px; font-weight:bold; }
+
+    table.sv-table { width:100%; border-collapse:collapse; font-size:13px; }
+    table.sv-table th {
+        background:#1f7a3d; color:#fff; font-weight:bold; padding:11px 14px; text-align:center;
+    }
+    table.sv-table th.col-name, table.sv-table td.col-name { text-align:right; }
+    table.sv-table td { padding:10px 14px; text-align:center; border-bottom:1px solid #eaf2ec; }
+    table.sv-table tbody tr:nth-child(even) { background:#f2f8f4; }
+    table.sv-table tbody tr.hide { display:none; }
+
+    .sv-total-row td { background:#dcefe1 !important; font-weight:bold; color:#1f7a3d; font-size:14px; padding:14px; }
+
+    .sv-footer { display:flex; justify-content:space-between; align-items:center; padding:26px 26px 22px; border-top:1px dashed #cfd8d3; margin-top:6px; font-size:12.5px; color:#555; }
+
+    @media print {
+        #top, #navigation, .no-print { display:none !important; }
+        body { background:#fff; }
+        .sv-doc { border:none; }
+    }
+</style>
+
+<div class="sv-back no-print">
+    <a href="{{ back_url }}">◀ بازگشت به گزارش‌های گدام</a>
+</div>
+
+<div class="sv-doc">
+    <div class="sv-head">
+        <div class="titles">
+            <div class="cname">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+            <div class="subtitle">گزارش رسمی موجودی انبار</div>
+        </div>
+        <div class="meta">
+            <div class="row">تاریخ: <b>{{ today.year }}/{{ '%02d'|format(today.month) }}/{{ '%02d'|format(today.day) }}</b></div>
+            <div class="row">واحد پول: <b>ارز پایه</b></div>
+        </div>
+    </div>
+
+    <div class="sv-toolbar">
+        <div class="sv-search">
+            <span class="ic">&#128269;</span>
+            <input type="text" id="svSearch" placeholder="جستجوی کالا...">
+        </div>
+        <div class="sv-actions no-print">
+            <button class="btn-pdf" onclick="window.print()">دانلود PDF</button>
+            <button class="btn-printpdf" onclick="window.print()">چاپ / PDF</button>
+        </div>
+    </div>
+
+    <table class="sv-table">
+        <thead>
+            <tr>
+                <th style="width:70px;">شماره</th>
+                <th class="col-name">شرح کالا</th>
+                <th>موجودی</th>
+                <th>بهای تمام‌شده واحد</th>
+                <th>ارزش موجودی</th>
+            </tr>
+        </thead>
+        <tbody id="svBody">
+            {% for r in rows %}
+            <tr class="sv-row">
+                <td>{{ r.no }}</td>
+                <td class="col-name sv-name">{{ r.item_name }}</td>
+                <td>{{ '{:,.2f}'.format(r.qty) }}</td>
+                <td>{{ '{:,.2f}'.format(r.unit_price) }}</td>
+                <td>{{ '{:,.2f}'.format(r.value) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center; padding:24px; color:#999;">هیچ کالای فعالی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="sv-total-row">
+                <td colspan="4" style="text-align:right;">جمع کل ارزش موجودی انبار</td>
+                <td>{{ '{:,.2f}'.format(grand_total_value) }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="sv-footer">
+        <div>تهیه‌کننده: سیستم انبارداری</div>
+        <div>امضاء مسئول انبار: .....................</div>
+    </div>
+</div>
+
+<script>
+document.getElementById('svSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    document.querySelectorAll('#svBody tr.sv-row').forEach(function(row) {
+        var nameCell = row.querySelector('.sv-name');
+        if (!nameCell) return;
+        var match = nameCell.textContent.toLowerCase().includes(term);
+        row.classList.toggle('hide', !match);
+    });
+});
+</script>
+{% endblock %}

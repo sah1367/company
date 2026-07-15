@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}صورت حساب فاکتور وار{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+    .total-row td { background:#f0f0f0; font-weight:bold; }
+    .amt-remaining-pos { color:#c62828; font-weight:bold; }
+    .amt-remaining-zero { color:#2e7d32; font-weight:bold; }
+</style>
+
+<a href="{{ url_for('main.customer_account', customer_id=customer.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">صورت حساب فاکتور وار — {{ customer.name }}</div>
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>شماره فاکتور</th>
+                <th>تاریخ</th>
+                <th>مجموع فاکتور</th>
+                <th>پرداخت شده</th>
+                <th>باقیمانده</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ inv.invoice_no }}</td>
+                <td>{{ inv.j_year }}-{{ '%02d'|format(inv.j_month) }}-{{ '%02d'|format(inv.j_day) }}</td>
+                <td>{{ '{:,.0f}'.format(inv.total_amount or 0) }}</td>
+                <td>{{ '{:,.0f}'.format(inv.paid_amount or 0) }}</td>
+                <td class="{{ 'amt-remaining-pos' if (inv.remaining or 0) > 0 else 'amt-remaining-zero' }}">{{ '{:,.0f}'.format(inv.remaining or 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">هیچ فاکتوری ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+        {% if invoices %}
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3">جمع کل</td>
+                <td>{{ '{:,.0f}'.format(total_amount) }}</td>
+                <td>{{ '{:,.0f}'.format(total_paid) }}</td>
+                <td>{{ '{:,.0f}'.format(total_remaining) }}</td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+{% endblock %}

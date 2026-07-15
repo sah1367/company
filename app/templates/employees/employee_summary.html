@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}صورت حساب کلی کارمند{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; text-align:center; }
+    .company-title { text-align:center; font-size:18px; font-weight:bold; margin:10px 0 2px; }
+    .company-sub { text-align:center; font-size:13px; margin-bottom:14px; }
+    .filter-body { padding:12px 18px; background:#fff; display:flex; gap:12px; align-items:center; justify-content:center; }
+    .filter-body select { padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:7px 22px; border-radius:4px; cursor:pointer; font-size:13px; }
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:11px; padding:7px 8px; text-align:center; white-space:nowrap; }
+    table.cat-table td { padding:6px 8px; font-size:11px; border-bottom:1px solid #eee; text-align:center; white-space:nowrap; }
+    td.desc-cell { text-align:right; white-space:normal; }
+    .amt-debit { color:#1a237e; }
+    .amt-credit { color:#c62828; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+    .balance-note { text-align:center; font-weight:bold; margin:14px 0; font-size:14px; }
+</style>
+
+<a href="{{ url_for('main.employee_account', employee_id=employee.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="company-title">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+<div class="company-sub">صورت حساب محترم {{ employee.name }}</div>
+
+<div class="panel">
+    <form method="get" class="filter-body">
+        <label style="font-size:12px;">واحد پولی:</label>
+        <select name="currency" onchange="this.form.submit()">
+            <option value="">همه</option>
+            {% for c in active_currencies %}
+            <option value="{{ c }}" {% if currency_filter == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-blue">سرچ</button>
+    </form>
+</div>
+
+<div class="panel">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>تاریخ</th>
+                <th>واحد پولی</th>
+                <th>مرجع</th>
+                <th>توضیحات</th>
+                <th>رسیدگی (معاش)</th>
+                <th>بردگی (پرداختی)</th>
+                <th>حساب کنونی</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ e.j_year }}-{{ '%02d'|format(e.j_month) }}-{{ '%02d'|format(e.j_day) }}</td>
+                <td>{{ e.currency }}</td>
+                <td>{{ e.ref }}</td>
+                <td class="desc-cell">{{ e.desc }}</td>
+                <td class="amt-credit">{{ '{:,.0f}'.format(e.credit) if e.credit else '0' }}</td>
+                <td class="amt-debit">{{ '{:,.0f}'.format(e.debit) if e.debit else '0' }}</td>
+                <td style="font-weight:bold;">{{ '{:,.0f}'.format(e.balance) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">هیچ تراکنشی ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="balance-note">
+    مانده نهایی حساب: {{ '{:,.1f}'.format(balance) }}
+    {% if balance > 1 %} (کارمند بدهکار){% elif balance < -1 %} (شرکت بدهکار به کارمند){% endif %}
+</div>
+{% endblock %}

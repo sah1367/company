@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>قرار داد استخدام — {{ c.employee.name if c.employee else '' }}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { background:#fff; padding:20px; color:#111; }
+    .doc { max-width:800px; margin:0 auto; }
+
+    .company-header { text-align:center; margin-bottom:18px; }
+    .company-header .cname { font-size:16px; font-weight:bold; }
+    .company-header .cline { font-size:13px; margin-top:4px; }
+
+    .section-title { text-align:center; font-weight:bold; font-size:14px; margin:16px 0 8px; text-decoration:underline; }
+
+    table.art-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+    table.art-table td { border:1px solid #333; padding:7px 10px; font-size:13px; text-align:center; }
+    table.art-table td.head-row { background:#dfe7f0; font-weight:bold; }
+    table.art-table td.text-right { text-align:right; }
+
+    ol.rules-list { padding-right:24px; margin:0; }
+    ol.rules-list li { padding:4px 0; font-size:13px; }
+
+    .note-box { font-size:12.5px; text-align:justify; margin:14px 0; line-height:1.9; }
+    .note-box b { text-decoration:underline; }
+
+    .sign-section-title { text-align:center; font-weight:bold; font-size:13px; margin:18px 0 10px; }
+    .sign-grid { display:flex; justify-content:space-between; gap:20px; }
+    .sign-box { flex:1; border:1px solid #333; padding:14px; font-size:13px; line-height:2; }
+
+    .no-print { text-align:center; margin-bottom:14px; }
+    .no-print button { padding:8px 20px; background:#1e88e5; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; }
+    @media print { .no-print { display:none; } }
+</style>
+</head>
+<body>
+
+<div class="no-print"><button onclick="window.print()">چاپ قرارداد</button></div>
+
+<div class="doc">
+
+    <div class="company-header">
+        <div class="cname">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</div>
+        <div class="cline">مدیریت منابع بشری</div>
+        <div class="cline"><b>قرار داد استخدام</b></div>
+    </div>
+
+    <p style="font-size:13px; margin-bottom:10px;">این قرار داد شامل سه بخش اساسی می‌باشد.</p>
+
+    <div class="section-title">بخش اول: اطلاعات پایه قرارداد</div>
+    <table class="art-table">
+        <tr><td class="head-row">عنوان قرار داد</td><td>قرار داد استخدام {{ c.position or '—' }}</td></tr>
+        <tr><td class="head-row">تاریخ انعقاد قرار داد</td><td>{{ c.start_j_year }}/{{ '%02d'|format(c.start_j_month) }}/{{ '%02d'|format(c.start_j_day) }}</td></tr>
+        <tr><td class="head-row">محل انعقاد قرار داد</td><td>شهرک صنعتی گذره، فاز دوم، شقایق پنجم</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">طرفین قرار داد؛ اطلاعات کارفرما و اطلاعات کارمند</td></tr>
+        <tr><td class="head-row">کارفرما</td><td class="text-right">{{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }}</td></tr>
+        <tr>
+            <td class="head-row">کارمند/ کارگر</td>
+            <td class="text-right">
+                {{ c.employee.name if c.employee else '—' }}
+                {% if c.employee and c.employee.photo %}
+                <img src="{{ url_for('static', filename=c.employee.photo) }}" style="width:70px; height:80px; object-fit:cover; border:1px solid #333; float:left; margin-left:8px;">
+                {% endif %}
+            </td>
+        </tr>
+        <tr><td class="head-row">نام پدر</td><td class="text-right">{{ c.employee.father_name if c.employee and c.employee.father_name else '—' }}</td></tr>
+        <tr><td class="head-row">شماره تذکره/ کارت هویت</td><td class="text-right">{{ c.employee.tazkira_no if c.employee and c.employee.tazkira_no else '—' }}</td></tr>
+        <tr><td class="head-row">آدرس سکونت</td><td class="text-right">{{ c.employee.address if c.employee and c.employee.address else '—' }}</td></tr>
+        <tr><td class="head-row">شماره تماس</td><td class="text-right">{{ c.employee.phone if c.employee and c.employee.phone else '—' }}</td></tr>
+    </table>
+
+    <div class="section-title">بخش دوم: مواد و مفاد اصلی قرار داد (بخش فنی و اجرایی)</div>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۱: عنوان وظیفه</td></tr>
+        <tr><td colspan="2">{{ c.position or '—' }}</td></tr>
+        <tr><td colspan="2" class="text-right">محل کار: {{ company.name if company and company.name else 'کارخانه تولید صنایع غذایی و نوشیدنی غیر الکلی تک' }} می‌باشد</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۲: مدت قرار داد</td></tr>
+        <tr><td colspan="2">این قرار داد به مدت ({{ c.duration_years or 1 }}) سال از تاریخ امضاء معتبر بوده و در صورت رضایت طرفین قابل تمدید است.</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۳: ساعات کاری و مرخصی</td></tr>
+        <tr><td colspan="2">ساعات کاری روزانه: از ساعت {{ c.standard_start or '07:30' }} تا ساعت {{ c.standard_end or '17:30' }}</td></tr>
+        <tr><td colspan="2">روزهای کاری: {{ c.work_days or 'از شنبه تا پنج‌شنبه' }}</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۴: حقوق و مزایا</td></tr>
+        <tr><td colspan="2">مقدار حقوق ماهانه: {{ '{:,.0f}'.format(c.salary_amount or 0) }} {{ c.currency or '' }} (خالص) — {{ salary_words }}</td></tr>
+        <tr><td colspan="2">نحوه پرداخت: ماهانه از طریق وجه نقدی</td></tr>
+        <tr><td colspan="2">اضافه‌کاری: بر اساس قوانین شرکت (نرخ توافقی)</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۵: مسئولیت‌ها و وظایف کارمند</td></tr>
+        <tr><td colspan="2" class="text-right">آماده‌سازی مواد اولیه و تجهیزات مورد نیاز برای انجام وظیفه.</td></tr>
+        <tr><td colspan="2" class="text-right">همکاری در اجرای فرآیند کاری مطابق دستورالعمل‌ها و برنامه‌های شرکت.</td></tr>
+        <tr><td colspan="2" class="text-right">رعایت کامل استندردهای کیفیت، بهداشت و ایمنی.</td></tr>
+        <tr><td colspan="2" class="text-right">نظارت و همکاری با سرپرست برای تضمین انجام کار بدون نقص.</td></tr>
+        <tr><td colspan="2" class="text-right">ثبت و گزارش‌دهی هرگونه مشکل، نقص تجهیزات یا انحراف از روند کار.</td></tr>
+        <tr><td colspan="2" class="text-right">مشارکت در نگهداری و تمیزکاری تجهیزات و محیط کار برای حفظ استانداردها.</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۶: اصول و مقررات شرکت</td></tr>
+        <tr><td colspan="2">
+            <ol class="rules-list">
+                <li>عدم استعمال دخانیات، مواد مخدر و الکل در ساحه کاری</li>
+                <li>ممنوعیت ورود به بخش‌های غیر مجاز بدون اجازه</li>
+                <li>حفظ نظافت شخصی و استفاده از یونیفورم تمیز</li>
+                <li>منع خشونت، توهین و دعوا در محیط کارخانه</li>
+                <li>رعایت کامل بهداشت فردی و محیطی</li>
+                <li>ممنوعیت حمل موبایل در خط تولید</li>
+                <li>ممنوعیت عکاسی و فیلم‌برداری از خطوط تولید بدون اجازه</li>
+                <li>اجتناب از غیابت غیر موجه: بیش از سه روز غیبت متوالی موجب فسخ قرار داد می‌گردد</li>
+            </ol>
+        </td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۷: فسخ قرار داد</td></tr>
+        <tr><td colspan="2" class="text-right">کارفرما حق دارد در صورت نقص مقررات یا عدم رضایت از عملکرد کارمندان، قرار داد را با اطلاع قبلی ۷ روزه فسخ نماید.</td></tr>
+        <tr><td colspan="2" class="text-right">در صورت تخلف عمدی، سوء استفاده یا افشای اسرار، فسخ فوری و بدون غرامت انجام می‌شود.</td></tr>
+    </table>
+
+    <table class="art-table">
+        <tr><td class="head-row" colspan="2">ماده ۸: سایر موارد</td></tr>
+        <tr><td colspan="2" class="text-right">در صورت بروز اختلاف، حل آن ابتدا از طریق مذاکره و سپس از طریق مراجع قانونی صورت می‌گیرد.</td></tr>
+    </table>
+
+    <div class="note-box">
+        <b>نکته مهم:</b> در صورت بروز هر گونه حادثه انسانی، شامل صدمات، آسیب‌ها یا بیماری‌های ناشی از فعالیت‌های کاری، شرکت هیچ‌گونه
+        مسئولیتی ندارد و مسئولیت کامل و عواقب آن بر عهده فرد مقصر یا شخص آسیب‌دیده است. کارکنان موظف‌اند کلیه دستورالعمل و اصول ایمنی
+        و بهداشتی را رعایت کنند و در صورت عدم رعایت، مسئولیت کامل پیامدهای ناشی از قصور خود را بر عهده خواهند داشت.
+    </div>
+
+    <div class="sign-section-title">بخش سوم: تأیید، امضاء و پیوست‌های قرار داد (بخش نهایی و ثبتی)</div>
+
+    <div class="sign-grid">
+        <div class="sign-box">
+            امضاء و اثر انگشت:<br>
+            کارفرما<br>
+            نام: هارون الکوزی<br>
+            امضاء: .......................<br>
+            مهر شرکت
+        </div>
+        <div class="sign-box">
+            امضاء و اثر انگشت:<br>
+            کارمند<br>
+            نام: {{ c.employee.name if c.employee else '—' }}<br>
+            امضاء: .......................<br>
+            اثر انگشت
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

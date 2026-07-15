@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}صورت حساب کلی{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; max-width:600px; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    table.summary-table { width:100%; border-collapse:collapse; }
+    table.summary-table td { padding:10px 14px; font-size:13px; border-bottom:1px solid #eee; }
+    .summary-label { font-weight:bold; color:#333; }
+    .summary-value { text-align:left; }
+    .balance-row td { background:#ffe97a; font-weight:bold; font-size:14px; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+</style>
+
+<a href="{{ url_for('main.vendor_account', vendor_id=vendor.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">صورت حساب کلی — {{ vendor.name }}</div>
+    <table class="summary-table">
+        <tr>
+            <td class="summary-label">مانده افتتاحیه</td>
+            <td class="summary-value">{{ '{:,.0f}'.format(total_opening) }} AFN</td>
+        </tr>
+        <tr>
+            <td class="summary-label">تعداد فاکتورهای خرید</td>
+            <td class="summary-value">{{ invoice_count }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">جمع کل خریدها</td>
+            <td class="summary-value">{{ '{:,.0f}'.format(total_purchase) }} AFN</td>
+        </tr>
+        <tr>
+            <td class="summary-label">جمع پرداختی روی فاکتورها</td>
+            <td class="summary-value">{{ '{:,.0f}'.format(total_paid_on_invoices) }} AFN</td>
+        </tr>
+        <tr>
+            <td class="summary-label">جمع پرداخت‌های جداگانه</td>
+            <td class="summary-value">{{ '{:,.0f}'.format(total_payments) }} AFN</td>
+        </tr>
+        <tr>
+            <td class="summary-label">تعداد بار برگشتی فروشنده</td>
+            <td class="summary-value">{{ return_count }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">جمع بار برگشتی فروشنده</td>
+            <td class="summary-value">{{ '{:,.0f}'.format(total_returns) }} AFN</td>
+        </tr>
+        <tr class="balance-row">
+            <td>مانده نهایی حساب</td>
+            <td class="summary-value">{{ '{:,.1f}'.format(balance) }} AFN</td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

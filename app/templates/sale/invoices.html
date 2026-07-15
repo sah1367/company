@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+{% block title %}صدور فاکتور{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:13px; font-weight:bold; padding:9px 14px; }
+    .panel-body { padding:18px 16px; background:#fff; }
+
+    .top-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-bottom:10px; align-items:center; }
+    .top-row .grp { display:flex; align-items:center; gap:6px; }
+    .top-row label { font-size:12px; color:#333; white-space:nowrap; }
+    .top-row input, .top-row select { padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .date-group { display:flex; gap:4px; }
+    .date-group select { width:60px; }
+
+    table.bom-table { width:100%; border-collapse:collapse; }
+    table.bom-table th { background:#1e88e5; color:#fff; font-size:11px; padding:6px 6px; text-align:right; white-space:nowrap; }
+    table.bom-table td { padding:3px 5px; font-size:11px; border-bottom:1px solid #eee; }
+    table.bom-table input, table.bom-table select { width:100%; padding:4px 5px; border:1px solid #ddd; border-radius:3px; font-size:11px; }
+    .row-no { text-align:center; width:30px; color:#555; }
+
+    .summary-box { margin-top:14px; border:1px solid #1e88e5; border-radius:4px; overflow:hidden; max-width:400px; margin-left:auto; }
+    .summary-box .head { background:#1e88e5; color:#fff; font-size:12px; padding:6px 10px; }
+    .summary-box .row { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .summary-box .row label { color:#333; }
+    .summary-box .row input { width:150px; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .summary-box textarea { width:100%; border:none; padding:8px 10px; font-size:12px; font-family:Tahoma; resize:vertical; }
+
+    .btn-row { display:flex; justify-content:center; gap:8px; margin-top:16px; }
+    .btn-save { background:#1e88e5; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-save-print { background:#2e7d32; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .btn-cancel { background:#e53935; color:#fff; border:none; padding:7px 26px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:11px; padding:8px 8px; text-align:right; white-space:nowrap; }
+    table.cat-table td { padding:8px 8px; font-size:11px; border-bottom:1px solid #eee; white-space:nowrap; }
+    .act-link { color:#555; text-decoration:none; font-size:12px; }
+    .act-link:hover { color:#1e88e5; }
+    .paid-yes { color:#2e7d32; font-weight:bold; }
+    .paid-no { color:#c62828; font-weight:bold; }
+</style>
+
+<div style="background:#fff8e1; border:1px solid #ffe082; border-radius:4px; padding:10px 14px; font-size:12px; color:#795548; margin-bottom:14px;">
+    اگر ستون «تعداد» را پر کنید (مثلاً تعداد کارتن)، جمع هر ردیف = تعداد × فی، و در «جمع وزن» چاپی، وزن آن ردیف = مقدار وزن × تعداد
+    محاسبه می‌شود. اگر «تعداد» را خالی بگذارید، جمع = مقدار وزن × فی (حالت ساده‌ی فروش بر اساس وزن).
+</div>
+
+<div class="panel">
+    <div class="panel-head">صدور فاکتور</div>
+    <div class="panel-body">
+        <form method="post" id="invoiceForm">
+            {% if edit_inv %}
+            <input type="hidden" name="inv_id" value="{{ edit_inv.id }}">
+            {% endif %}
+
+            <div class="top-row">
+                <div class="grp">
+                    <label>سفارش مرتبط (اختیاری)</label>
+                    <select id="orderRefSelect" name="order_ref_id">
+                        <option value="">-- بدون سفارش --</option>
+                        {% for o in pending_orders %}
+                        <option value="{{ o.id }}" {% if edit_inv and edit_inv.order_ref_id == o.id %}selected{% endif %}>
+                            #{{ o.order_no }} — {{ o.customer.name if o.customer else '' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grp">
+                    <label>شماره فاکتور</label>
+                    <input type="text" name="invoice_no_display" style="width:70px"
+                           value="{{ edit_inv.invoice_no if edit_inv else '(خودکار)' }}" readonly>
+                </div>
+                <div class="grp">
+                    <label>تاریخ</label>
+                    <div class="date-group">
+                        <select name="j_year">
+                            {% for y in range(today.year-3, today.year+2) %}
+                            <option value="{{ y }}" {% if (edit_inv and edit_inv.j_year == y) or (not edit_inv and today.year == y) %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="j_month">
+                            {% for m in range(1,13) %}
+                            <option value="{{ m }}" {% if (edit_inv and edit_inv.j_month == m) or (not edit_inv and today.month == m) %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="j_day">
+                            {% for d in range(1,32) %}
+                            <option value="{{ d }}" {% if (edit_inv and edit_inv.j_day == d) or (not edit_inv and today.day == d) %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="grp">
+                    <label>مشتری</label>
+                    <input type="text" id="customerNameInput" name="customer_name" list="customerNamesList" autocomplete="off" required
+                           value="{{ edit_inv.customer.name if edit_inv and edit_inv.customer else '' }}">
+                    <datalist id="customerNamesList">
+                        {% for c in customer_list %}
+                        <option value="{{ c.name }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="grp">
+                    <label>بانک</label>
+                    <select name="bank_id" style="width:130px">
+                        <option value="">-- انتخاب بانک --</option>
+                        {% for b in bank_list %}
+                        <option value="{{ b.id }}" {% if edit_inv and edit_inv.bank_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grp">
+                    <label>واحدپول</label>
+                    <select name="currency">
+                        <option value="">-- انتخاب واحدپول --</option>
+                        {% for c in active_currencies %}
+                        <option value="{{ c.code }}" {% if (edit_inv and edit_inv.currency == c.code) or (not edit_inv and c.code == 'AFN') %}selected{% endif %}>{{ c.code }} - {{ c.country_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grp">
+                    <label>نرخ تبدیل (به دالر)</label>
+                    <input type="number" step="0.01" name="exchange_rate" style="width:70px"
+                           value="{{ edit_inv.exchange_rate if edit_inv else '65' }}">
+                </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+            <table class="bom-table" id="bomTable">
+                <thead>
+                    <tr>
+                        <th class="row-no">شماره</th>
+                        <th>نام جنس</th>
+                        <th>گدام</th>
+                        <th>موجودی گدام</th>
+                        <th>واحداندازه گیری</th>
+                        <th>فی</th>
+                        <th>مقدار وزن</th>
+                        <th>تعداد</th>
+                        <th>مجموع</th>
+                        <th style="width:30px"></th>
+                    </tr>
+                </thead>
+                <tbody id="bomTableBody">
+                    {% if edit_lines %}
+                        {% for i, line in edit_lines.items() %}
+                        <tr>
+                            <td class="row-no">{{ loop.index }}</td>
+                            <td>
+                                <select name="row_item_{{ i }}" class="row-item-select">
+                                    <option value="">--</option>
+                                    {% for it in items %}
+                                    <option value="{{ it.id }}" {% if line.item_name == it.name %}selected{% endif %}>{{ it.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="row_stock_{{ i }}" class="row-stock">
+                                    <option value="">--</option>
+                                    {% for s in stocks %}
+                                    <option value="{{ s.id }}" {% if line.stock_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-available" name="row_available_{{ i }}" value="{{ line.available_qty }}" readonly style="background:#f5f5f5;"></td>
+                            <td>
+                                <select name="row_quantity_{{ i }}" class="row-quantity">
+                                    <option value="">--</option>
+                                    {% for u in units %}
+                                    <option value="{{ u.id }}" {% if line.quantity_id == u.id %}selected{% endif %}>{{ u.quantity }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-price" name="row_price_{{ i }}" value="{{ line.price }}"></td>
+                            <td><input type="number" step="0.01" class="row-amount" name="row_amount_{{ i }}" value="{{ line.amount }}"></td>
+                            <td><input type="number" step="0.01" class="row-count" name="row_count_{{ i }}" placeholder="تعداد (اختیاری)" value="{{ line.count_desc or '' }}"></td>
+                            <td><input type="text" class="row-total" readonly value="{{ '%.2f'|format(line.total) }}"></td>
+                            <td><a href="#" class="row-remove" title="حذف ردیف">✕</a></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td class="row-no">1</td>
+                            <td>
+                                <select name="row_item_1" class="row-item-select">
+                                    <option value="">--</option>
+                                    {% for it in items %}
+                                    <option value="{{ it.id }}">{{ it.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="row_stock_1" class="row-stock">
+                                    <option value="">--</option>
+                                    {% for s in stocks %}
+                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-available" name="row_available_1" readonly style="background:#f5f5f5;"></td>
+                            <td>
+                                <select name="row_quantity_1" class="row-quantity">
+                                    <option value="">--</option>
+                                    {% for u in units %}
+                                    <option value="{{ u.id }}">{{ u.quantity }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" class="row-price" name="row_price_1"></td>
+                            <td><input type="number" step="0.01" class="row-amount" name="row_amount_1"></td>
+                            <td><input type="number" step="0.01" class="row-count" name="row_count_1" placeholder="تعداد (اختیاری)"></td>
+                            <td><input type="text" class="row-total" readonly value="0.00"></td>
+                            <td><a href="#" class="row-remove" title="حذف ردیف">✕</a></td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            </div>
+
+            <template id="rowTemplate">
+                <tr>
+                    <td class="row-no"></td>
+                    <td>
+                        <select name="row_item_INDEX" class="row-item-select">
+                            <option value="">--</option>
+                            {% for it in items %}
+                            <option value="{{ it.id }}">{{ it.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="row_stock_INDEX" class="row-stock">
+                            <option value="">--</option>
+                            {% for s in stocks %}
+                            <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="row-available" name="row_available_INDEX" readonly style="background:#f5f5f5;"></td>
+                    <td>
+                        <select name="row_quantity_INDEX" class="row-quantity">
+                            <option value="">--</option>
+                            {% for u in units %}
+                            <option value="{{ u.id }}">{{ u.quantity }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="row-price" name="row_price_INDEX"></td>
+                    <td><input type="number" step="0.01" class="row-amount" name="row_amount_INDEX"></td>
+                    <td><input type="number" step="0.01" class="row-count" name="row_count_INDEX" placeholder="تعداد (اختیاری)"></td>
+                    <td><input type="text" class="row-total" readonly value="0.00"></td>
+                    <td><a href="#" class="row-remove" title="حذف ردیف">✕</a></td>
+                </tr>
+            </template>
+
+            <div class="summary-box">
+                <div class="head">پرداخت نقدی</div>
+                <div class="row">
+                    <input type="text" id="totalAmountDisplay" readonly value="{{ '%.2f'|format(edit_inv.total_amount) if edit_inv else '0.00' }}">
+                    <label>مجموعه</label>
+                </div>
+                <div class="row">
+                    <input type="number" step="0.01" name="discount" id="discountInput" value="{{ edit_inv.discount if edit_inv else '' }}">
+                    <label>تخفیف</label>
+                </div>
+                <div class="row">
+                    <input type="text" id="payableDisplay" readonly value="0.00">
+                    <label>قابل پرداخت</label>
+                </div>
+                <div class="row">
+                    <input type="number" step="0.01" name="loading_fee" id="loadingFeeInput" value="{{ edit_inv.loading_fee if edit_inv else '' }}">
+                    <label>هزینه بارگیری</label>
+                </div>
+                <div class="row">
+                    <input type="number" step="0.01" name="paid_amount" id="paidAmountInput" value="{{ edit_inv.paid_amount if edit_inv else '' }}">
+                    <label>مجموع پرداختی</label>
+                </div>
+                <div class="row">
+                    <input type="text" id="remainingDisplay" readonly value="{{ '%.2f'|format(edit_inv.remaining) if edit_inv else '0.00' }}">
+                    <label>باقیمانده</label>
+                </div>
+                <textarea name="notes" rows="2" placeholder="توضیحات">{{ edit_inv.notes if edit_inv else '' }}</textarea>
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ url_for('main.sales_invoices') }}" class="btn-cancel">انصراف</a>
+                <button type="submit" class="btn-save">ذخیره</button>
+                <button type="submit" name="save_and_print" value="1" class="btn-save-print">ذخیره و چاپ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <span>اطلاعات ثبت شده</span>
+        <input type="text" id="liveSearch" placeholder="Search Information"
+               style="padding:5px 10px; border:none; border-radius:4px; font-size:12px;">
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>شماره</th>
+                <th>مشتری</th>
+                <th>فاکتور</th>
+                <th>ساعت</th>
+                <th>تاریخ</th>
+                <th>مجموع</th>
+                <th>تخفیف</th>
+                <th>هزینه بارگیری</th>
+                <th>پرداختی</th>
+                <th>باقی</th>
+                <th>رسید</th>
+                <th style="width:120px">عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="invTableBody">
+            {% for r in records %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="inv-customer">{{ r.customer.name if r.customer else '-' }}</td>
+                <td>#{{ r.invoice_no }}</td>
+                <td>{{ r.time_str or '-' }}</td>
+                <td>{{ r.j_year }}-{{ '%02d'|format(r.j_month) }}-{{ '%02d'|format(r.j_day) }}</td>
+                <td>{{ '{:,.0f}'.format(r.total_amount) }}{{ r.currency }}</td>
+                <td>{{ r.discount }}</td>
+                <td>{{ r.loading_fee }}</td>
+                <td>{{ '{:,.0f}'.format(r.paid_amount) }}</td>
+                <td style="color:{{ '#c62828' if r.remaining > 0 else '#2e7d32' }}; font-weight:bold;">{{ '{:,.0f}'.format(r.remaining) }}</td>
+                <td class="{{ 'paid-yes' if r.remaining <= 0 else 'paid-no' }}">{{ '✅' if r.remaining <= 0 else '❌' }}</td>
+                <td>
+                    <a href="{{ url_for('main.sales_invoices', edit=r.id) }}" class="act-link">✏ ویرایش</a>
+                    <a href="{{ url_for('main.sales_invoice_print', id=r.id) }}" class="act-link" target="_blank" title="چاپ فاکتور">🖨 فاکتور</a>
+                    <a href="{{ url_for('main.sales_invoice_warehouse_check', id=r.id) }}" class="act-link" target="_blank" title="چک گدام">📦 چک گدام</a>
+                    <a href="{{ url_for('main.sales_invoice_delete', id=r.id) }}" class="act-link"
+                       onclick="return confirm('حذف شود؟')">🗑</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="12" style="text-align:center; padding:20px; color:#999;">هیچ فاکتوری ثبت نشده</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<script>
+var nextRowIndex = {{ (edit_lines.keys() | list | max + 1) if edit_lines else 2 }};
+
+function attachRowEvents(tr) {
+    var priceInput = tr.querySelector('.row-price');
+    var amountInput = tr.querySelector('.row-amount');
+    var countInput = tr.querySelector('.row-count');
+    var itemSelect = tr.querySelector('.row-item-select');
+    var removeLink = tr.querySelector('.row-remove');
+
+    function onChangeAny() {
+        recalcRow(tr);
+        maybeAddNewRow(tr);
+    }
+    priceInput.addEventListener('input', onChangeAny);
+    amountInput.addEventListener('input', onChangeAny);
+    countInput.addEventListener('input', onChangeAny);
+
+    itemSelect.addEventListener('change', function() {
+        var itemId = itemSelect.value;
+        maybeAddNewRow(tr);
+        if (!itemId) return;
+        fetch('/sale/invoices/item-info/' + itemId)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!data.found) return;
+                if (data.stock_id) tr.querySelector('.row-stock').value = data.stock_id;
+                if (data.quantity_id) tr.querySelector('.row-quantity').value = data.quantity_id;
+                tr.querySelector('.row-available').value = data.available_qty;
+                recalcRow(tr);
+            });
+    });
+
+    removeLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        var body = document.getElementById('bomTableBody');
+        if (body.querySelectorAll('tr').length <= 1) return;
+        tr.remove();
+        renumberRows();
+        recalcGrandTotal();
+    });
+}
+
+function renumberRows() {
+    var rows = document.querySelectorAll('#bomTableBody tr');
+    rows.forEach(function(row, idx) {
+        row.querySelector('.row-no').textContent = idx + 1;
+    });
+}
+
+function maybeAddNewRow(currentTr) {
+    var body = document.getElementById('bomTableBody');
+    var isLastRow = currentTr === body.lastElementChild;
+    var itemFilled = currentTr.querySelector('.row-item-select').value;
+    if (isLastRow && itemFilled) {
+        addNewRow();
+    }
+}
+
+function addNewRow() {
+    var template = document.getElementById('rowTemplate');
+    var clone = template.content.cloneNode(true);
+    var html = clone.querySelector('tr').outerHTML.replace(/INDEX/g, nextRowIndex);
+    nextRowIndex++;
+
+    var body = document.getElementById('bomTableBody');
+    var wrapper = document.createElement('tbody');
+    wrapper.innerHTML = html;
+    var newRow = wrapper.firstElementChild;
+    body.appendChild(newRow);
+    renumberRows();
+    attachRowEvents(newRow);
+}
+
+function clearAllRowsAndFill(lines) {
+    var body = document.getElementById('bomTableBody');
+    body.innerHTML = '';
+    nextRowIndex = 1;
+    lines.forEach(function(line) {
+        addNewRow();
+        var tr = body.lastElementChild;
+        if (line.item_id) tr.querySelector('.row-item-select').value = line.item_id;
+        if (line.stock_id) tr.querySelector('.row-stock').value = line.stock_id;
+        if (line.quantity_id) tr.querySelector('.row-quantity').value = line.quantity_id;
+        tr.querySelector('.row-available').value = line.available_qty;
+        tr.querySelector('.row-price').value = line.price;
+        tr.querySelector('.row-amount').value = line.amount;
+        if (line.count_desc) tr.querySelector('.row-count').value = line.count_desc;
+        recalcRow(tr);
+    });
+    addNewRow(); // یک ردیف خالی اضافه برای ادامه
+    recalcGrandTotal();
+}
+
+function recalcRow(tr) {
+    var amount = parseFloat(tr.querySelector('.row-amount').value) || 0;
+    var price = parseFloat(tr.querySelector('.row-price').value) || 0;
+    var countRaw = tr.querySelector('.row-count').value.trim();
+    var count = parseFloat(countRaw);
+    var total;
+    if (countRaw !== '' && !isNaN(count)) {
+        total = count * price;   // تعداد × فی (وقتی تعداد پر شده باشد)
+    } else {
+        total = amount * price;  // مقدار وزن × فی (حالت ساده، وقتی تعداد خالی است)
+    }
+    tr.querySelector('.row-total').value = total.toFixed(2);
+    recalcGrandTotal();
+}
+
+function recalcGrandTotal() {
+    var totals = document.querySelectorAll('.row-total');
+    var sum = 0;
+    totals.forEach(function(t) { sum += parseFloat(t.value) || 0; });
+    document.getElementById('totalAmountDisplay').value = sum.toFixed(2);
+    recalcRemaining();
+}
+
+function recalcRemaining() {
+    var total = parseFloat(document.getElementById('totalAmountDisplay').value) || 0;
+    var discount = parseFloat(document.getElementById('discountInput').value) || 0;
+    var loading = parseFloat(document.getElementById('loadingFeeInput').value) || 0;
+    var paid = parseFloat(document.getElementById('paidAmountInput').value) || 0;
+    var payable = total - discount;
+    document.getElementById('payableDisplay').value = payable.toFixed(2);
+    var remaining = payable + loading - paid;
+    document.getElementById('remainingDisplay').value = remaining.toFixed(2);
+}
+
+document.getElementById('loadingFeeInput').addEventListener('input', recalcRemaining);
+document.getElementById('discountInput').addEventListener('input', recalcRemaining);
+document.getElementById('paidAmountInput').addEventListener('input', recalcRemaining);
+
+document.querySelectorAll('#bomTableBody tr').forEach(function(tr) {
+    attachRowEvents(tr);
+});
+recalcGrandTotal();
+
+// انتخاب سفارش مرتبط -> پر کردن خودکار مشتری و جدول کالاها
+document.getElementById('orderRefSelect').addEventListener('change', function() {
+    var orderId = this.value;
+    if (!orderId) return;
+    fetch('/sale/invoices/order-lines/' + orderId)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (!data.found) return;
+            document.getElementById('customerNameInput').value = data.customer_name;
+            clearAllRowsAndFill(data.lines);
+        });
+});
+
+document.getElementById('liveSearch').addEventListener('input', function() {
+    var term = this.value.trim().toLowerCase();
+    var rows = document.querySelectorAll('#invTableBody tr');
+    rows.forEach(function(row) {
+        var cell = row.querySelector('.inv-customer');
+        if (!cell) return;
+        row.style.display = cell.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

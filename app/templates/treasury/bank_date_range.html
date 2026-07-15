@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}صورت حساب تاریخ وار بانک{% endblock %}
+{% block content %}
+<style>
+    .panel { border:1px solid #cfe0ee; border-radius:4px; margin-bottom:18px; overflow:hidden; }
+    .panel-head { background:#1e88e5; color:#fff; font-size:14px; font-weight:bold; padding:10px 14px; }
+    .panel-body { padding:30px 20px; background:#fff; }
+    .field-row { display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:18px; }
+    .field-row label { font-size:13px; color:#333; white-space:nowrap; width:110px; }
+    .date-group { display:flex; gap:6px; width:280px; }
+    .date-group select { flex:1; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px; }
+    .field-row select.single { width:280px; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; }
+    .btn-row { display:flex; justify-content:center; }
+    .btn-blue { background:#1e88e5; color:#fff; border:none; padding:8px 30px; border-radius:4px; cursor:pointer; font-size:13px; }
+
+    table.cat-table { width:100%; border-collapse:collapse; }
+    table.cat-table th { background:#1e88e5; color:#fff; font-size:12px; padding:8px 10px; text-align:right; }
+    table.cat-table td { padding:8px 10px; font-size:12px; border-bottom:1px solid #eee; }
+    .amt-debit { color:#2e7d32; }
+    .amt-credit { color:#c62828; }
+    .back-link { display:inline-block; margin:14px 0; color:#1e88e5; text-decoration:none; font-size:13px; }
+</style>
+
+<a href="{{ url_for('main.bank_account', bank_id=bank.id) }}" class="back-link">⟵ بازگشت به خلاصه حسابات</a>
+
+<div class="panel">
+    <div class="panel-head">صورت حساب تاریخ وار بانک — {{ bank.name }}</div>
+    <div class="panel-body">
+        <form method="get">
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="from_year">
+                        <option value="">--</option>
+                        {% for y in range(today.year-3, today.year+2) %}
+                        <option value="{{ y }}" {% if from_year == y %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="from_month">
+                        <option value="">--</option>
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if from_month == m %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="from_day">
+                        <option value="">--</option>
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if from_day == d %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ شروع</label>
+            </div>
+
+            <div class="field-row">
+                <div class="date-group">
+                    <select name="to_year">
+                        <option value="">--</option>
+                        {% for y in range(today.year-3, today.year+2) %}
+                        <option value="{{ y }}" {% if to_year == y %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="to_month">
+                        <option value="">--</option>
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}" {% if to_month == m %}selected{% endif %}>{{ '%02d'|format(m) }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="to_day">
+                        <option value="">--</option>
+                        {% for d in range(1,32) %}
+                        <option value="{{ d }}" {% if to_day == d %}selected{% endif %}>{{ '%02d'|format(d) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>تاریخ ختم</label>
+            </div>
+
+            <div class="field-row">
+                <select name="currency_id" class="single">
+                    <option value="">-- همه --</option>
+                    {% for c in active_currencies %}
+                    <option value="{{ c.id }}" {% if selected_currency == c.id %}selected{% endif %}>{{ c.code }} — {{ c.country_name }}</option>
+                    {% endfor %}
+                </select>
+                <label>واحد پولی</label>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-blue">جستجو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+<div class="panel">
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>تاریخ</th>
+                <th>شرح</th>
+                <th>واحدپول</th>
+                <th>رسیدگی</th>
+                <th>پردگی</th>
+                <th>مانده</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ e.j_year }}-{{ '%02d'|format(e.j_month) }}-{{ '%02d'|format(e.j_day) }}</td>
+                <td>{{ e.desc }}</td>
+                <td>{{ e.currency }}</td>
+                <td class="amt-debit">{{ '{:,.0f}'.format(e.debit) if e.debit else '-' }}</td>
+                <td class="amt-credit">{{ '{:,.0f}'.format(e.credit) if e.credit else '-' }}</td>
+                <td style="font-weight:bold;">{{ '{:,.0f}'.format(e.balance) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#999;">هیچ تراکنشی در این بازه یافت نشد</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
